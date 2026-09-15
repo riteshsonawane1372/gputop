@@ -22,8 +22,11 @@ race:
 test-nvidia:
 	$(GO) test -tags integration -run Integration -v ./internal/gpu/nvidia/
 
+# Lint for both target OSes: build-tagged files (e.g. the Linux NVML
+# binding) are only analyzed for their own GOOS.
 lint:
-	golangci-lint run ./...
+	GOOS=linux golangci-lint run ./...
+	GOOS=darwin golangci-lint run ./...
 
 fmt:
 	@test -z "$$(gofmt -l .)" || (gofmt -l . && echo "run: gofmt -w ." && exit 1)

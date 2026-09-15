@@ -26,10 +26,14 @@ jobs:
         run: |
           go vet ./...
           GOOS=darwin go vet ./...
-      - name: golangci-lint
+      - name: golangci-lint (linux)
         uses: golangci/golangci-lint-action@v8
         with:
           version: v2.5.0
+      - name: golangci-lint (darwin build tags)
+        env:
+          GOOS: darwin
+        run: golangci-lint run ./...
 
   test:
     strategy:

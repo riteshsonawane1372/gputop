@@ -21,7 +21,6 @@ type (
 	fnUint       func(v *uint32) Return
 	fnDevStr     func(d Device, buf *byte, length uint32) Return
 	fnDevU32     func(d Device, v *uint32) Return
-	fnDevI32     func(d Device, v *int32) Return
 	fnDevU64     func(d Device, v *uint64) Return
 	fnDevEnumU32 func(d Device, e uint32, v *uint32) Return
 	fnDevU32U32  func(d Device, a, b *uint32) Return
@@ -462,7 +461,7 @@ func (l *lib) DeviceGetTemperature(d Device) (int, Return) {
 	if l.deviceGetTemperatureV != nil {
 		t := Temperature{Version: TemperatureVersion, SensorType: TEMPERATURE_GPU}
 		if r := l.deviceGetTemperatureV(d, &t); r == SUCCESS {
-			return int(t.Temperature), r
+			return int(t.Temperature), SUCCESS
 		} else if l.deviceGetTemperature == nil {
 			return 0, r
 		}
@@ -577,7 +576,7 @@ func listProcs(f fnDevProcs, d Device) ([]ProcessInfo, Return) {
 		r := f(d, &n, &buf[0])
 		switch r {
 		case SUCCESS:
-			return buf[:min(n, count)], r
+			return buf[:min(n, count)], SUCCESS
 		case ERROR_INSUFFICIENT_SIZE:
 			count = n + 16
 		default:
