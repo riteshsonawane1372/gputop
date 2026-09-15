@@ -46,6 +46,12 @@ const (
 	ScrubBack   Action = "scrub_back"
 	ScrubFwd    Action = "scrub_forward"
 	ScrubNow    Action = "scrub_now"
+	Describe    Action = "describe"
+	Logs        Action = "logs"
+	Wrap        Action = "wrap"
+	Container   Action = "next_container"
+	Command     Action = "command"
+	Dashboard   Action = "dashboard"
 	Tab1        Action = "tab_1"
 	Tab2        Action = "tab_2"
 	Tab3        Action = "tab_3"
@@ -84,7 +90,7 @@ var defaults = []Binding{
 	// The arrow keys switch tabs; left/right stay bindable for users who
 	// prefer them inside tables.
 	{Left, nil, "move left"},
-	{Right, []string{"l"}, "move right"},
+	{Right, nil, "move right"},
 	{PageUp, []string{"pgup", "ctrl+u"}, "page up"},
 	{PageDown, []string{"pgdown", "ctrl+d"}, "page down"},
 	{Home, []string{"home", "g"}, "first row"},
@@ -101,6 +107,12 @@ var defaults = []Binding{
 	{ScrubBack, []string{","}, "scrub back in time"},
 	{ScrubFwd, []string{"."}, "scrub forward in time"},
 	{ScrubNow, []string{"n"}, "jump to now"},
+	{Command, []string{":"}, "command (:pods :gpus :dash :ns NAME …)"},
+	{Dashboard, []string{"D"}, "metrics dashboard"},
+	{Describe, []string{"d"}, "describe pod"},
+	{Logs, []string{"l"}, "pod logs"},
+	{Container, []string{"c"}, "next container (logs)"},
+	{Wrap, []string{"w"}, "wrap lines (logs)"},
 }
 
 // Map resolves keys to actions.

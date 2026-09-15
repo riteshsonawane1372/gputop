@@ -159,6 +159,16 @@ func (m *Model) viewFooter(w int) string {
 	if m.input != nil {
 		prompt := "/"
 		help := "  enter apply · esc cancel · ctrl+u clear"
+		if m.input.mode == "command" {
+			prompt = ":"
+			help = "  tab complete · enter run · esc cancel"
+			if sug := m.suggestions(m.input.value); len(sug) > 0 {
+				if len(sug) > 8 {
+					sug = sug[:8]
+				}
+				help = "  " + strings.Join(sug, " · ") + "   (tab complete)"
+			}
+		}
 		if m.input.mode == "filter" {
 			prompt = "filter "
 			help = "  key:value (gpu: user: pod: ns: name: kind: sev:) · enter apply · esc cancel"

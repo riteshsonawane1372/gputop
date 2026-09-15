@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/x/ansi"
 	"github.com/gputop/gputop/internal/theme"
 	"github.com/muesli/termenv"
 )
@@ -123,4 +124,34 @@ func TestTableLayoutDropsColumnsByPriority(t *testing.T) {
 	}
 	tiny := tb.Render(tt, 12, 3)
 	assertWidth(t, tiny, 12)
+}
+
+func TestMultiChart(t *testing.T) {
+	t0 := th()
+	rising := []float64{0, 25, 50, 75, 100}
+	flat := []float64{math.NaN(), 10, 10, 10, 10}
+	block, lo, hi := MultiChart(t0, []Series{{Values: rising, Style: t0.OK}, {Values: flat, Style: t0.Warn}}, 20, 5, 0, 0)
+	if len(block) != 5 || lo != 0 || hi != 200 {
+		t.Fatalf("lines %d scale %v..%v (want autoscaled 0..200)", len(block), lo, hi)
+	}
+	dotsSeen := 0
+	for _, l := range block {
+		if Width(l) != 20 {
+			t.Fatalf("line width %d: %q", Width(l), l)
+		}
+		for _, r := range ansi.Strip(l) {
+			if r >= 0x2801 && r <= 0x28FF {
+				dotsSeen++
+			}
+		}
+	}
+	if dotsSeen == 0 {
+		t.Fatal("nothing drawn")
+	}
+	if _, lo, hi = MultiChart(t0, nil, 10, 3, 0, 100); lo != 0 || hi != 100 {
+		t.Fatalf("fixed scale %v..%v", lo, hi)
+	}
+	if b, _, _ := MultiChart(t0, nil, 0, 3, 0, 0); b != nil {
+		t.Fatal("zero width must render nothing")
+	}
 }

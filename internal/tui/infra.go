@@ -13,7 +13,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/gputop/gputop/internal/gpu"
 	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/kube"
 	"github.com/gputop/gputop/internal/metric"
 	"github.com/gputop/gputop/internal/model"
 	"github.com/gputop/gputop/internal/tui/widgets"
@@ -185,94 +184,6 @@ func (m *Model) remoteNodes(nodes []NodeSummary, w, h int) widgets.Block {
 }
 
 // ----------------------------------------------------------- Kubernetes
-
-func keysKube(m *Model, a keymap.Action) (bool, tea.Cmd) {
-	return listKeys(&m.kubeSel, len(m.view().Processes), 10, a), nil
-}
-
-func viewKube(m *Model, w, h int) widgets.Block {
-	th := m.th
-	s := m.view()
-	k := s.Kubernetes
-	env := k.Environment
-	lw := 12
-	api := th.Dim.Render("disabled")
-	if k.APIEnabled {
-		api = th.OK.Render("in-cluster service account")
-		if k.APIError != "" {
-			api = th.Crit.Render(k.APIError)
-		}
-	}
-	mode := string(env.Mode)
-	if s.Node.Demo {
-		mode = "simulated (demo)"
-	}
-	envLines := []string{
-		m.kv("Mode", th.Text.Render(mode), lw) + widgets.Space(th, 3) + m.kv("Node", m.naOr(orNA(env.NodeName, env.NodeName != ""), th.Text), 6),
-		m.kv("API", api, lw) + widgets.Space(th, 3) + m.kv("Pods", th.Text.Render(fmt.Sprint(k.PodsKnown)), 6) +
-			widgets.Space(th, 3) + m.kv("Refreshed", th.Text.Render(fmtAgo(m.now(), k.LastRefresh)), 11),
-	}
-	if env.Context != "" {
-		envLines = append(envLines, m.kv("kubeconfig", th.Text.Render(env.Context+" ("+env.Kubeconfig+")"), lw))
-	}
-	if env.Mode == kube.ModeKubeconfig {
-		envLines = append(envLines, th.Dim.Render("kubeconfig detected but gputop is not on a Kubernetes node: GPU↔pod correlation needs to run on the node (planned: API via kubeconfig)."))
-	}
-	envBox := widgets.Box(th, widgets.BoxOpts{Title: "Kubernetes"}, w, len(envLines)+2, envLines)
-
-	q := m.q("kubernetes")
-	tb := &widgets.Table{Columns: []widgets.Column{
-		{Title: "GPU", Width: 4, Align: widgets.Right},
-		{Title: "NAMESPACE", Width: 14, Min: 6},
-		{Title: "POD", Width: 28, Min: 10, Flex: true},
-		{Title: "CONTAINER", Width: 14, Priority: 2},
-		{Title: "WORKLOAD", Width: 26, Min: 10, Flex: true, Priority: 1},
-		{Title: "PID", Width: 8, Align: widgets.Right, Priority: 3},
-		{Title: "VRAM", Width: 9, Align: widgets.Right},
-		{Title: "SM%", Width: 4, Align: widgets.Right},
-		{Title: "QOS", Width: 10, Priority: 4},
-	}, SortCol: -1}
-	unattributed := 0
-	for _, p := range s.Processes {
-		if p.Kube.PodName == "" && p.Kube.PodUID == "" {
-			unattributed++
-			continue
-		}
-		wl := "—"
-		if p.Kube.WorkloadName != "" {
-			wl = p.Kube.WorkloadKind + "/" + p.Kube.WorkloadName
-			if p.Kube.Inferred {
-				wl += " (inferred)"
-			}
-		}
-		pod := p.Kube.PodName
-		if pod == "" {
-			pod = "uid " + p.Kube.PodUID
-		}
-		gl := fmt.Sprint(p.DeviceIndex)
-		if p.PartitionID != "" {
-			gl = fmt.Sprintf("%d:%d", p.DeviceIndex, p.PartitionIndex)
-		}
-		if !matchesQuery(q, map[string]string{"gpu": fmt.Sprint(p.DeviceIndex), "namespace": p.Kube.Namespace, "pod": pod, "workload": wl, "container": p.Kube.Container}) {
-			continue
-		}
-		tb.Rows = append(tb.Rows, []widgets.Cell{
-			widgets.C(th.Accent, gl), widgets.C(th.Dim, p.Kube.Namespace), widgets.C(th.Text, pod),
-			widgets.C(th.Dim, orDash(p.Kube.Container)), widgets.C(th.Text, wl), widgets.C(th.Dim, fmt.Sprint(p.PID)),
-			widgets.R(m.naOr(optBytes(p.MemUsed), th.Text)), widgets.R(m.naOr(optF(p.SMUtil, "%.0f"), th.Text)),
-			widgets.C(th.Dim, orDash(p.Kube.QoS)),
-		})
-	}
-	m.kubeSel = widgets.Scroll(m.kubeSel, 0, len(tb.Rows))
-	tb.Selected = m.kubeSel
-	tb.RowMark = m.listRowMark("kube:", &m.kubeSel)
-	if len(tb.Rows) == 0 {
-		tb.Selected = -1
-	}
-	right := fmt.Sprintf("%d attributed · %d without pod", len(tb.Rows), unattributed)
-	th2 := h - len(envBox)
-	return widgets.VJoin(envBox, widgets.Box(th, widgets.BoxOpts{Title: "GPU → Pod → Workload", RightTitle: right, Focus: true}, w, th2, tb.Render(th, w-2, th2-2)))
-}
 
 func orDash(s string) string {
 	if s == "" {

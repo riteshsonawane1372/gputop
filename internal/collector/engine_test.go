@@ -16,6 +16,7 @@ import (
 	"github.com/gputop/gputop/internal/gpu/sim"
 	"github.com/gputop/gputop/internal/history"
 	"github.com/gputop/gputop/internal/host"
+	"github.com/gputop/gputop/internal/kube"
 	"github.com/gputop/gputop/internal/model"
 )
 
@@ -206,5 +207,40 @@ func TestOnce(t *testing.T) {
 	s := e.Once(context.Background(), 50*time.Millisecond)
 	if !s.Ready || len(s.GPUs) != 2 || !s.GPUs[0].Sample.UtilPercent.OK || s.Host == nil {
 		t.Fatalf("once: %+v", s)
+	}
+}
+
+func TestEngineDemoKubernetes(t *testing.T) {
+	e := New(Options{Providers: []gpu.Provider{sim.New(sim.Options{GPUs: 8})}, Intervals: fastIntervals(), Demo: true})
+	s := e.Once(context.Background(), 500*time.Millisecond)
+	k := s.Kubernetes
+	if !k.Inspect || len(k.Pods) < 8 {
+		t.Fatalf("demo pods: inspect=%v pods=%d", k.Inspect, len(k.Pods))
+	}
+	var pending, worker kube.PodInfo
+	for _, p := range k.Pods {
+		switch p.Name {
+		case "llama-70b-eval-0":
+			pending = p
+		case "llama-70b-pretrain-worker-3":
+			worker = p
+		}
+	}
+	if pending.Status() != "Pending" || pending.GPURequests != 4 || worker.Restarts() == 0 {
+		t.Fatalf("pending=%+v worker=%+v", pending, worker)
+	}
+	ref := kube.PodRef{UID: worker.UID, Name: worker.Name, Namespace: worker.Namespace}
+	lines, source, err := e.PodLogs(context.Background(), ref, "trainer", 20)
+	if err != nil || source != "simulated" || len(lines) != 20 {
+		t.Fatalf("logs: %d %s %v", len(lines), source, err)
+	}
+	evs, err := e.PodEvents(context.Background(), ref)
+	if err != nil || len(evs) == 0 {
+		t.Fatalf("events: %v %v", evs, err)
+	}
+
+	real := New(Options{Providers: []gpu.Provider{sim.New(sim.Options{GPUs: 1})}, Intervals: fastIntervals()})
+	if _, _, err := real.PodLogs(context.Background(), ref, "trainer", 1); !errors.Is(err, kube.ErrNoInspect) {
+		t.Fatalf("non-demo without kubernetes: %v", err)
 	}
 }

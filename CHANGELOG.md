@@ -6,6 +6,28 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-15
+
+### Added
+
+- k9s-style Kubernetes tab: GPU pods list with READY, STATUS, RESTARTS, GPUs,
+  GPU requests, SM%, VRAM, workload and age; a describe view (containers,
+  requests/limits, conditions, labels, events, live GPU usage, processes) and a
+  container logs view (node CRI log files or the API; autoscroll, wrap,
+  container switching, search). Clickable breadcrumbs. The snapshot JSON gains
+  `kubernetes.pods`. RBAC for logs (`pods/log`) and events is optional.
+- Command bar (`:`) with k9s-style aliases, `:ns NAME`, pod lookup and tab
+  completion.
+- Dashboard tab modelled on the NVIDIA DCGM Grafana dashboard: stat tiles,
+  multi-GPU time-series panels in Grafana's palette with DCGM field names,
+  a reliability table, time ranges from the history store, panel zoom and
+  GPU isolation (`[`/`]` or click the legend). `D` opens it.
+- `--demo` simulates GPU pods, logs and events.
+
+### Changed
+
+- `l` opens pod logs; the unused `right` action has no default key.
+
 ## [0.1.0] - 2026-09-15
 
 ### Added
@@ -74,6 +96,7 @@ All notable changes to this project are documented here. The format follows
 - CI (lint, race tests on Linux amd64/arm64 and macOS, cross-compilation, NVML
   ABI test, smoke tests, GoReleaser check) and a GoReleaser release workflow.
 
-[Unreleased]: https://github.com/riteshsonawane1372/gputop/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/riteshsonawane1372/gputop/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/riteshsonawane1372/gputop/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/riteshsonawane1372/gputop/compare/v0.0.1...v0.1.0
 [0.0.1]: https://github.com/riteshsonawane1372/gputop/releases/tag/v0.0.1

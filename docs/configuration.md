@@ -60,7 +60,11 @@ terminal library: letters and symbols as typed (`G` differs from `g`), `enter`,
 | `filter` / `search` | `f` / `/` |
 | `select` / `back` | `enter` / `esc` |
 | `up` / `down` | `up`, `k` / `down`, `j` |
-| `left` / `right` | — / `l` |
+| `left` / `right` | — (unbound) |
+| `command` | `:` |
+| `dashboard` | `D` |
+| `describe` / `logs` | `d` / `l` |
+| `next_container` / `wrap` | `c` / `w` |
 | `page_up` / `page_down` | `pgup`, `ctrl+u` / `pgdown`, `ctrl+d` |
 | `home` / `end` | `home`, `g` / `end`, `G` |
 | `zoom_in` / `zoom_out` | `+`, `=` / `-`, `_` |

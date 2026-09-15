@@ -18,6 +18,12 @@ rules:
   - apiGroups: [""]
     resources: [pods]
     verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/log]   # optional: pod logs view
+    verbs: [get]
+  - apiGroups: [""]
+    resources: [events]     # optional: events in the pod describe view
+    verbs: [list]
   - apiGroups: [batch]
     resources: [jobs]
     verbs: [get]

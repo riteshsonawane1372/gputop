@@ -233,3 +233,118 @@ func Sparkline(th *theme.Theme, values []float64, w int, maxV float64) string {
 	}
 	return sb.String()
 }
+
+// Series is one line of a MultiChart.
+type Series struct {
+	Values []float64
+	Style  lipgloss.Style
+}
+
+// MultiChart draws several series as braille lines on a shared scale
+// (Grafana-style time series). Values are right-aligned like Chart; each
+// cell takes the color of the series drawn last in it. Returns the block
+// and the scale used.
+func MultiChart(th *theme.Theme, series []Series, w, h int, minV, maxV float64) (Block, float64, float64) {
+	if w <= 0 || h <= 0 {
+		return nil, 0, 0
+	}
+	lo, hi := minV, maxV
+	if hi <= lo {
+		lo, hi = math.Inf(1), math.Inf(-1)
+		for _, s := range series {
+			for _, v := range s.Values {
+				if !math.IsNaN(v) {
+					lo, hi = math.Min(lo, v), math.Max(hi, v)
+				}
+			}
+		}
+		if math.IsInf(lo, 0) {
+			lo, hi = 0, 1
+		}
+		if lo >= 0 {
+			lo = 0
+		}
+		hi = niceCeil(hi * 1.05)
+		if hi-lo < 1e-9 {
+			hi = lo + 1
+		}
+	}
+	px, rows := w*2, h*4
+	cells := make([]rune, w*h)
+	owner := make([]int, w*h)
+	for i := range owner {
+		owner[i] = -1
+	}
+	set := func(x, dotFromBottom, si int) {
+		if dotFromBottom < 1 || dotFromBottom > rows {
+			return
+		}
+		r := (rows - dotFromBottom) / 4
+		dr := (rows - dotFromBottom) % 4
+		c := x / 2
+		cells[r*w+c] |= dots[x%2][dr]
+		owner[r*w+c] = si
+	}
+	for si, s := range series {
+		var pts []float64
+		if len(s.Values) >= px {
+			pts = Resample(s.Values, px)
+		} else {
+			pts = make([]float64, px)
+			pad := px - len(s.Values)
+			for i := range pts {
+				if i < pad {
+					pts[i] = math.NaN()
+				} else {
+					pts[i] = s.Values[i-pad]
+				}
+			}
+		}
+		prev := -1
+		for x, v := range pts {
+			if math.IsNaN(v) {
+				prev = -1
+				continue
+			}
+			f := math.Max(0, math.Min(1, (v-lo)/(hi-lo)))
+			y := max(1, int(math.Round(f*float64(rows-1)))+1)
+			if prev > 0 {
+				// Join steep segments so lines stay continuous.
+				for yy := min(prev, y) + 1; yy < max(prev, y); yy++ {
+					set(x, yy, si)
+				}
+			}
+			set(x, y, si)
+			prev = y
+		}
+	}
+	out := make(Block, h)
+	var sb strings.Builder
+	for r := 0; r < h; r++ {
+		sb.Reset()
+		for c := 0; c < w; c++ {
+			i := r*w + c
+			if cells[i] == 0 {
+				sb.WriteString(th.Base.Render(" "))
+				continue
+			}
+			sb.WriteString(series[owner[i]].Style.Render(string(0x2800 + cells[i])))
+		}
+		out[r] = sb.String()
+	}
+	return out, lo, hi
+}
+
+// niceCeil rounds v up to 1, 2, 2.5 or 5 times a power of ten.
+func niceCeil(v float64) float64 {
+	if v <= 0 {
+		return 1
+	}
+	p := math.Pow(10, math.Floor(math.Log10(v)))
+	for _, m := range []float64{1, 2, 2.5, 5, 10} {
+		if v <= m*p {
+			return m * p
+		}
+	}
+	return 10 * p
+}

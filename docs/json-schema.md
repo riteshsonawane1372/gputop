@@ -37,7 +37,7 @@ process command lines removed).
 | `processes` | array | GPU processes (below) |
 | `topology` | array | Pairs `a`, `b` (GPU UUIDs), `pcie` level (`internal`, `pix`, `pxb`, `phb`, `node`, `sys`, `unknown`), `nvlinks` count |
 | `host` | object | `info`, `cpu`, `memory`, `filesystems`, `block_devices`, `network` |
-| `kubernetes` | object | Detected `environment`, API status, pods known |
+| `kubernetes` | object | Detected `environment`, API status, pods known, and `pods`: GPU pods with `uid`, `name`, `namespace`, `node`, `pod_ip`, `phase`, `qos`, `created`, `labels`, `workload_kind`/`workload_name`, `gpu_requests`, `containers` (image, state, ready, restarts, last state, requests, limits), `conditions` and `source` (`api` or `node`) |
 | `fleet` | object | Fleet summary and `imbalance` |
 | `events` | array | Up to 200 most recent events, oldest first |
 | `alerts` | array | Active alerts |

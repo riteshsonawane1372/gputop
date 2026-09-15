@@ -82,7 +82,8 @@ type Model struct {
 	nodesSel int
 	netSel   int
 	workSel  int
-	kubeSel  int
+	kube     kubeState
+	dash     dashState
 }
 
 type query struct {
@@ -261,11 +262,24 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.hist.res, m.hist.err = msg.res, msg.err
 		}
 		return m, nil
+	case dashMsg:
+		m.onDash(msg)
+		return m, nil
+	case kubeLogsMsg:
+		m.onKubeLogs(msg)
+		return m, nil
+	case kubeEventsMsg:
+		m.onKubeEvents(msg)
+		return m, nil
 	case tickMsg:
-		if m.activeID == "history" {
-			return m, tea.Batch(tick(), m.maybeQueryHistory())
+		cmds := []tea.Cmd{tick(), m.kubeTick()}
+		switch m.activeID {
+		case "history":
+			cmds = append(cmds, m.maybeQueryHistory())
+		case "dashboard":
+			cmds = append(cmds, m.maybeQueryDash(false))
 		}
-		return m, tick()
+		return m, tea.Batch(cmds...)
 	case tea.KeyMsg:
 		return m.handleKey(msg)
 	case tea.MouseMsg:
@@ -339,11 +353,25 @@ func (m *Model) dispatch(a keymap.Action, key string) tea.Cmd {
 		m.activeID = "history"
 		m.onEnterTab()
 		return m.enterCmd()
+	case keymap.Dashboard:
+		return m.gotoTab("dashboard")
+	case keymap.Command:
+		m.input = &inputState{mode: "command"}
+		return nil
 	case keymap.Refresh:
 		m.src.RefreshNow()
 		m.hist.stale = true
 		m.setToast("refreshing…", 1500*time.Millisecond)
-		return m.enterCmd()
+		cmd := m.enterCmd()
+		switch {
+		case m.activeID == "dashboard":
+			cmd = m.maybeQueryDash(true)
+		case m.activeID == "kubernetes" && m.kube.view == kubeLogs:
+			cmd = m.fetchLogs(true)
+		case m.activeID == "kubernetes" && m.kube.view == kubeDescribe:
+			cmd = m.fetchEvents(true)
+		}
+		return cmd
 	case keymap.Pause:
 		m.paused = !m.paused
 		if m.paused {
@@ -384,8 +412,13 @@ func (m *Model) dispatch(a keymap.Action, key string) tea.Cmd {
 }
 
 func (m *Model) enterCmd() tea.Cmd {
-	if m.activeID == "history" {
+	switch m.activeID {
+	case "history":
 		return m.maybeQueryHistory()
+	case "kubernetes":
+		return m.kubeTick()
+	case "dashboard":
+		return m.maybeQueryDash(false)
 	}
 	return nil
 }
@@ -395,9 +428,10 @@ func (m *Model) handleInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	t := m.activeTab()
 	q := m.q(t.id)
 	apply := func() {
-		if in.mode == "search" {
+		switch in.mode {
+		case "search":
 			q.search = in.value
-		} else {
+		case "filter":
 			q.filter = in.value
 		}
 	}
@@ -409,6 +443,15 @@ func (m *Model) handleInput(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case tea.KeyEnter:
 		apply()
 		m.input = nil
+		if in.mode == "command" {
+			return m, m.runCommand(in.value)
+		}
+	case tea.KeyTab:
+		if in.mode == "command" {
+			if sug := m.suggestions(in.value); len(sug) > 0 {
+				in.value = sug[0]
+			}
+		}
 	case tea.KeyBackspace:
 		if r := []rune(in.value); len(r) > 0 {
 			in.value = string(r[:len(r)-1])

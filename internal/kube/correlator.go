@@ -5,7 +5,10 @@ package kube
 
 import (
 	"context"
+	"errors"
 	"log/slog"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -30,6 +33,10 @@ type Status struct {
 	APIError    string      `json:"api_error,omitempty"`
 	PodsKnown   int         `json:"pods_known"`
 	LastRefresh time.Time   `json:"last_refresh,omitzero"`
+	// Pods are the pods using or requesting GPUs on this node.
+	Pods []PodInfo `json:"pods,omitempty"`
+	// Inspect is true when pod logs or events can be fetched.
+	Inspect bool `json:"inspect,omitempty"`
 }
 
 // Correlator resolves cgroup references to pods and workloads. Safe for
@@ -55,7 +62,7 @@ func NewCorrelator(env Environment, podLogsDir string, api *APIClient, log *slog
 	return &Correlator{
 		env: env, podLogsDir: podLogsDir, api: api, log: log,
 		byUID: map[string]Pod{}, byCont: map[string]string{}, workloads: map[string][2]string{},
-		status: Status{Environment: env, APIEnabled: api != nil},
+		status: Status{Environment: env, APIEnabled: api != nil, Inspect: api != nil || podLogsDir != ""},
 	}
 }
 
@@ -69,7 +76,7 @@ func (c *Correlator) Refresh(ctx context.Context) error {
 	if c.podLogsDir != "" {
 		if refs, err := ScanPodLogs(c.podLogsDir); err == nil {
 			for uid, r := range refs {
-				byUID[uid] = Pod{PodRef: r}
+				byUID[uid] = Pod{PodRef: r, Info: PodInfo{UID: uid, Name: r.Name, Namespace: r.Namespace, Node: c.env.NodeName, Source: "node"}}
 			}
 		}
 	}
@@ -86,6 +93,24 @@ func (c *Correlator) Refresh(ctx context.Context) error {
 			}
 			k, n := c.api.Workload(ctx, p)
 			workloads[p.UID] = [2]string{k, n}
+		}
+	}
+
+	// Pods known only from log directories: containers come from their
+	// subdirectories so the logs view can offer them.
+	if c.podLogsDir != "" {
+		for uid, p := range byUID {
+			if p.Info.Source != "node" || len(p.Info.Containers) > 0 {
+				continue
+			}
+			if entries, err := os.ReadDir(filepath.Join(c.podLogsDir, p.Namespace+"_"+p.Name+"_"+uid)); err == nil {
+				for _, e := range entries {
+					if e.IsDir() {
+						p.Info.Containers = append(p.Info.Containers, ContainerInfo{Name: e.Name()})
+					}
+				}
+				byUID[uid] = p
+			}
 		}
 	}
 
@@ -135,4 +160,59 @@ func (c *Correlator) Status() Status {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	return c.status
+}
+
+// Pods returns info for pods that request GPUs or whose UID is in using
+// (pods with GPU processes), sorted by namespace and name.
+func (c *Correlator) Pods(using map[string]bool) []PodInfo {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	var out []PodInfo
+	for uid, p := range c.byUID {
+		if p.GPURequests == 0 && !using[uid] {
+			continue
+		}
+		info := p.Info
+		if info.UID == "" {
+			info = PodInfo{UID: p.UID, Name: p.Name, Namespace: p.Namespace, Source: "node"}
+		}
+		if w, ok := c.workloads[uid]; ok {
+			info.WorkloadKind, info.WorkloadName = w[0], w[1]
+		}
+		out = append(out, info)
+	}
+	SortPods(out)
+	return out
+}
+
+// ErrNoInspect is returned when neither the API nor pod log files are
+// available.
+var ErrNoInspect = errors.New("pod logs and events need the Kubernetes API (kubernetes.api) or the node's pod log directory")
+
+// PodLogs returns the last tail lines of a container's log, preferring the
+// node's log files and falling back to the API. source names where they
+// came from.
+func (c *Correlator) PodLogs(ctx context.Context, pod PodRef, container string, tail int) (lines []string, source string, err error) {
+	if c.podLogsDir != "" && pod.UID != "" {
+		lines, err = ReadContainerLog(c.podLogsDir, pod, container, tail)
+		if err == nil {
+			return lines, "node log files", nil
+		}
+	}
+	if c.api != nil {
+		lines, err = c.api.PodLogs(ctx, pod.Namespace, pod.Name, container, tail)
+		return lines, "kubernetes API", err
+	}
+	if err == nil {
+		err = ErrNoInspect
+	}
+	return nil, "", err
+}
+
+// PodEvents lists a pod's events (API only).
+func (c *Correlator) PodEvents(ctx context.Context, pod PodRef) ([]PodEvent, error) {
+	if c.api == nil {
+		return nil, errors.New("pod events need Kubernetes API access (kubernetes.api: true)")
+	}
+	return c.api.PodEvents(ctx, pod.Namespace, pod.Name)
 }

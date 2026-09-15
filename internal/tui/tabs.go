@@ -35,9 +35,10 @@ func allTabs() []*tabDef {
 		{id: "pcie", title: "PCIe", visible: hasPCIe, view: viewPCIe, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "mig", title: "MIG", visible: func(m *Model) bool { return m.view().HasPartitioning() }, view: viewMIG, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "nodes", title: "Nodes", view: viewNodes, keys: keysNodes},
-		{id: "kubernetes", title: "Kubernetes", visible: kubeVisible, view: viewKube, keys: keysKube, searchable: true},
+		{id: "kubernetes", title: "Kubernetes", visible: kubeVisible, view: viewKube, keys: keysKube, hints: hintsKube, searchable: true},
 		{id: "workloads", title: "Workloads", visible: func(m *Model) bool { return len(m.view().Processes) > 0 }, view: viewWorkloads, keys: keysWorkloads, searchable: true},
 		{id: "network", title: "Network", visible: func(m *Model) bool { return m.view().Host != nil }, view: viewNetwork, keys: keysNetwork, searchable: true},
+		{id: "dashboard", title: "Dashboard", visible: hasGPUs, view: viewDashboard, keys: keysDashboard, hints: hintsDashboard},
 		{id: "history", title: "History", view: viewHistory, keys: keysHistory, hints: hintsHistory},
 		{id: "events", title: "Events", view: viewEvents, keys: keysEvents, hints: hintsEvents, searchable: true},
 		{id: "health", title: "Health", view: viewHealth, keys: keysHealth, hints: hintsGPUSelect},
@@ -46,7 +47,7 @@ func allTabs() []*tabDef {
 
 func kubeVisible(m *Model) bool {
 	s := m.view()
-	if s.Kubernetes.Environment.Mode != "" && s.Kubernetes.Environment.Mode != kube.ModeNone {
+	if len(s.Kubernetes.Pods) > 0 || s.Kubernetes.Environment.Mode != "" && s.Kubernetes.Environment.Mode != kube.ModeNone {
 		return true
 	}
 	for _, p := range s.Processes {

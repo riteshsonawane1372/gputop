@@ -92,6 +92,11 @@ func (l *live) observe(s *model.Snapshot) {
 		l.get("nvltx/" + id).push(val(avail && g.Derived.NVLinkTxBps.OK, g.Derived.NVLinkTxBps.V))
 		l.get("nvlrx/" + id).push(val(avail && g.Derived.NVLinkRxBps.OK, g.Derived.NVLinkRxBps.V))
 		l.get("clock/" + id).push(val(avail && sm.ClockCoreMHz.OK, sm.ClockCoreMHz.V))
+		l.get("fbused/" + id).push(val(avail && sm.MemUsed.OK, float64(sm.MemUsed.V)/(1<<30)))
+		l.get("memtemp/" + id).push(val(avail && sm.MemTempC.OK, sm.MemTempC.V))
+		l.get("enc/" + id).push(val(avail && sm.EncoderPercent.OK, sm.EncoderPercent.V))
+		l.get("dec/" + id).push(val(avail && sm.DecoderPercent.OK, sm.DecoderPercent.V))
+		l.get("fan/" + id).push(val(avail && sm.FanPct.OK, sm.FanPct.V))
 	}
 	f := s.Fleet
 	l.get("fleet/util").push(val(f.UtilAvg.OK, f.UtilAvg.V))

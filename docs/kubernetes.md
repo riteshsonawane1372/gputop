@@ -68,6 +68,43 @@ image; building and publishing an official image is on the roadmap. Until then,
 package the release binary on a minimal glibc base image (for example
 `gcr.io/distroless/base-debian12`).
 
+## The Kubernetes tab (k9s-style)
+
+The tab lists **GPU pods**: pods on the node that request GPUs (`*/gpu` or
+MIG resources) or run GPU processes. Columns follow `kubectl get pods`
+(READY, STATUS, RESTARTS, AGE) plus the GPUs a pod uses, its GPU requests,
+summed SM% and VRAM, and the owning workload.
+
+| Key | Pods list | Describe | Logs |
+|---|---|---|---|
+| `Enter` / `d` / double-click | describe | | describe (`d`) |
+| `l` | logs | logs | |
+| `↑` `↓` `PgUp` `PgDn` / wheel | select | scroll | scroll |
+| `c` | | | next container |
+| `s` / `w` | | | autoscroll / wrap |
+| `r` | | reload events | reload |
+| `/` | search pods | | search log lines |
+| `Esc` | clear filters | back | back |
+
+**Describe** shows the pod (status, node, IPs, QoS, age, workload, owner, GPU
+requests), live usage of each GPU it runs on, containers (image, state,
+restarts with the last termination reason, requests and limits with GPU
+resources highlighted), GPU processes, conditions, labels and events.
+Breadcrumbs at the top are clickable.
+
+**Logs** tails the last 1000 lines of a container, refreshed every 2 seconds
+while autoscroll is on. gputop reads the node's CRI log files
+(`/var/log/pods/<ns>_<pod>_<uid>/<container>/N.log`) when they are mounted and
+falls back to the API (`pods/log`). Events always come from the API.
+
+The command bar works like k9s: `:pods`, `:ns ml-training`, `:ns all`, or
+`:worker-3` to describe the first pod whose name contains the text.
+
+Without API access, pods found from cgroups and log directories are listed
+with their names, containers, GPUs and processes; status, restarts, requests
+and events need the API. Logs and events are fetched by the local agent and
+are not available in `--remote` sessions.
+
 ## Required RBAC
 
 ```yaml
@@ -75,6 +112,12 @@ rules:
   - apiGroups: [""]
     resources: [pods]
     verbs: [get, list]
+  - apiGroups: [""]
+    resources: [pods/log]
+    verbs: [get]        # optional: logs view when node log files are not mounted
+  - apiGroups: [""]
+    resources: [events]
+    verbs: [list]       # optional: events in the describe view
   - apiGroups: [batch]
     resources: [jobs]
     verbs: [get]        # optional: only to resolve CronJobs

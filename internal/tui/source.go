@@ -4,7 +4,10 @@
 package tui
 
 import (
+	"context"
+
 	"github.com/gputop/gputop/internal/history"
+	"github.com/gputop/gputop/internal/kube"
 	"github.com/gputop/gputop/internal/model"
 )
 
@@ -16,6 +19,13 @@ type Source interface {
 	RefreshNow()
 	// History returns nil when history is disabled.
 	History() history.Reader
+}
+
+// KubeInspector is optionally implemented by sources that can fetch pod
+// logs and events on demand (the local engine; not remote agents).
+type KubeInspector interface {
+	PodLogs(ctx context.Context, pod kube.PodRef, container string, tail int) (lines []string, source string, err error)
+	PodEvents(ctx context.Context, pod kube.PodRef) ([]kube.PodEvent, error)
 }
 
 // NodeSummary is a remote node's status for the Nodes tab.

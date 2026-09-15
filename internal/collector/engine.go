@@ -470,9 +470,22 @@ func (e *Engine) publish() {
 	})
 	e.updateNVLinkTopology(s)
 
-	if e.o.Kube != nil {
+	switch sim := e.kubeSimulator(); {
+	case e.o.Kube != nil:
 		s.Kubernetes = e.o.Kube.Status()
-	} else {
+		using := map[string]bool{}
+		for _, p := range s.Processes {
+			if p.Kube.PodUID != "" {
+				using[p.Kube.PodUID] = true
+			}
+		}
+		s.Kubernetes.Pods = e.o.Kube.Pods(using)
+	case sim != nil:
+		s.Kubernetes = kube.Status{Environment: kube.Environment{Mode: kube.ModeInCluster, NodeName: simNode}, APIEnabled: true, Inspect: true}
+		s.Kubernetes.Pods = sim.SimulatedPods()
+		s.Kubernetes.PodsKnown = len(s.Kubernetes.Pods)
+		s.Kubernetes.LastRefresh = now
+	default:
 		s.Kubernetes = kube.Status{Environment: e.o.KubeEnv}
 	}
 
@@ -653,4 +666,42 @@ func (e *Engine) watchEvents(ctx context.Context) {
 		}(ps, src)
 	}
 	wg.Wait()
+}
+
+// simNode is the node name reported for simulated pods.
+const simNode = "gpu-node-01"
+
+// kubeSimulator returns the demo provider's pod simulator, if any.
+func (e *Engine) kubeSimulator() kube.Simulator {
+	if !e.o.Demo {
+		return nil
+	}
+	for _, ps := range e.provs {
+		if sim, ok := ps.p.(kube.Simulator); ok {
+			return sim
+		}
+	}
+	return nil
+}
+
+// PodLogs returns the tail of a pod container's log and where it came from.
+func (e *Engine) PodLogs(ctx context.Context, pod kube.PodRef, container string, tail int) ([]string, string, error) {
+	if sim := e.kubeSimulator(); sim != nil {
+		return sim.SimulatedLogs(pod, container, tail), "simulated", nil
+	}
+	if e.o.Kube == nil {
+		return nil, "", kube.ErrNoInspect
+	}
+	return e.o.Kube.PodLogs(ctx, pod, container, tail)
+}
+
+// PodEvents lists a pod's Kubernetes events.
+func (e *Engine) PodEvents(ctx context.Context, pod kube.PodRef) ([]kube.PodEvent, error) {
+	if sim := e.kubeSimulator(); sim != nil {
+		return sim.SimulatedEvents(pod), nil
+	}
+	if e.o.Kube == nil {
+		return nil, kube.ErrNoInspect
+	}
+	return e.o.Kube.PodEvents(ctx, pod)
 }

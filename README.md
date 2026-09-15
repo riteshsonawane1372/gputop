@@ -251,6 +251,8 @@ All bindings are configurable (see [Configuration](#configuration)).
 | `p` / `space` | pause display (collection continues) | `[` `]` | previous / next GPU |
 | `+` / `-` | zoom history window | `m` / `M` | next / previous metric |
 | `,` / `.` | scrub back / forward in time | `n` | jump to now |
+| `:` | command bar (`:pods` `:gpus` `:dash` `:ns NAME` or a pod name; `Tab` completes) | `D` | metrics dashboard |
+| `d` / `l` | describe pod / pod logs | `c` / `w` | next container / wrap (logs) |
 
 **Mouse** (disable with `ui.mouse: false`): click a tab to open it, click a row
 to select it, double-click a row for its detail, click a column header to sort,
@@ -278,9 +280,10 @@ present.
 | **PCIe** | bus ID, current vs. maximum generation and width (degradation flagged), throughput, replays, AER counters, NUMA node |
 | **MIG** | MIG mode, instances (profile, GPU/compute instance IDs, memory) and attached processes |
 | **Nodes** | host identity, CPU (per core, load, frequency), memory, filesystems, disk I/O, remote node summaries |
-| **Kubernetes** | detected mode, API status, GPU → pod → workload table |
+| **Kubernetes** | k9s-style GPU pods list (ready, status, restarts, GPUs, SM%, VRAM, workload, age); `Enter`/`d` describe (containers, requests/limits, conditions, labels, events, live GPU usage), `l` container logs |
 | **Workloads** | processes grouped by workload: GPUs, VRAM, utilization, efficiency, idle/straggler/throttling signals |
 | **Network** | Ethernet and InfiniBand interfaces with RX/TX rates, packets, errors and drops |
+| **Dashboard** | the NVIDIA DCGM Grafana dashboard in the terminal: stat tiles, one time-series panel per metric with a line per GPU (utilization, temperature, power, framebuffer, memory copy, clocks, memory temperature, PCIe, NVLink, encoder/decoder, fan), reliability table (XID, ECC, row remapping, PCIe replays, violations, energy); time range, panel zoom, GPU isolation |
 | **History** | time machine: any metric for any GPU or the host, GPU comparison, value inspector and events at the cursor |
 | **Events** | timeline of discoveries, Xids, ECC errors, throttling, PCIe/NVLink changes, MIG changes, process start/stop |
 | **Health** | health scores with reasons, active alerts, collector status and gputop's own resource usage |
@@ -423,7 +426,12 @@ or with a kubeconfig, and correlates GPU processes using:
    owning Deployment, StatefulSet, DaemonSet, Job or CronJob.
 
 When only naming patterns are available a Deployment may be inferred; such
-results are marked as inferred. A DaemonSet manifest with minimal RBAC is in
+results are marked as inferred.
+
+The Kubernetes tab works like k9s: select a pod and press `Enter` (or
+double-click) to **describe** it, `l` for its **logs**, and use the `:` command
+bar (`:pods`, `:ns ml-training`, `:worker-3`) to jump around. A DaemonSet
+manifest with minimal RBAC is in
 [`deploy/kubernetes/`](deploy/kubernetes/daemonset.yaml). See
 [docs/kubernetes.md](docs/kubernetes.md).
 
