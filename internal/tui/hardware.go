@@ -37,6 +37,9 @@ func (m *Model) splitTableChart(w, h int, table func(w, h int) widgets.Block, ch
 }
 
 func viewMemory(m *Model, w, h int) widgets.Block {
+	if m.apple() {
+		return viewMemoryApple(m, w, h)
+	}
 	th := m.th
 	s := m.view()
 	return m.splitTableChart(w, h, func(w, h int) widgets.Block {
@@ -53,6 +56,7 @@ func viewMemory(m *Model, w, h int) widgets.Block {
 		}, SortCol: -1}
 		widths := tb.Layout(w - 2)
 		_, tb.Selected = m.selected()
+		tb.RowMark = m.gpuRowMark()
 		top := map[gpu.ID]model.Process{}
 		for _, p := range s.Processes {
 			if cur, ok := top[p.DeviceID]; !ok || p.MemUsed.Or(0) > cur.MemUsed.Or(0) {
@@ -102,6 +106,9 @@ func viewMemory(m *Model, w, h int) widgets.Block {
 }
 
 func viewPower(m *Model, w, h int) widgets.Block {
+	if m.apple() {
+		return viewPowerApple(m, w, h)
+	}
 	th := m.th
 	s := m.view()
 	return m.splitTableChart(w, h, func(w, h int) widgets.Block {
@@ -117,6 +124,7 @@ func viewPower(m *Model, w, h int) widgets.Block {
 		}, SortCol: -1}
 		widths := tb.Layout(w - 2)
 		_, tb.Selected = m.selected()
+		tb.RowMark = m.gpuRowMark()
 		for i := range s.GPUs {
 			g := &s.GPUs[i]
 			smp, d := g.Sample, g.Device
@@ -172,6 +180,9 @@ func viewPower(m *Model, w, h int) widgets.Block {
 }
 
 func viewThermals(m *Model, w, h int) widgets.Block {
+	if m.apple() {
+		return viewThermalsApple(m, w, h)
+	}
 	th := m.th
 	s := m.view()
 	return m.splitTableChart(w, h, func(w, h int) widgets.Block {
@@ -188,6 +199,7 @@ func viewThermals(m *Model, w, h int) widgets.Block {
 		}, SortCol: -1}
 		widths := tb.Layout(w - 2)
 		_, tb.Selected = m.selected()
+		tb.RowMark = m.gpuRowMark()
 		for i := range s.GPUs {
 			g := &s.GPUs[i]
 			smp, d := g.Sample, g.Device
@@ -230,6 +242,7 @@ func viewPCIe(m *Model, w, h int) widgets.Block {
 			{Title: "NUMA", Width: 4, Align: widgets.Right, Priority: 4},
 		}, SortCol: -1}
 		_, tb.Selected = m.selected()
+		tb.RowMark = m.gpuRowMark()
 		for i := range s.GPUs {
 			g := &s.GPUs[i]
 			c := g.Counters
@@ -270,6 +283,7 @@ func viewNVLink(m *Model, w, h int) widgets.Block {
 		{Title: "ERRORS", Width: 6, Align: widgets.Right},
 	}, SortCol: -1}
 	_, tb.Selected = m.selected()
+	tb.RowMark = m.gpuRowMark()
 	for i := range s.GPUs {
 		gg := &s.GPUs[i]
 		var errs uint64

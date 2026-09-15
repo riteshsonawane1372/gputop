@@ -53,14 +53,14 @@ terminal library: letters and symbols as typed (`G` differs from `g`), `enter`,
 |---|---|
 | `quit` | `q`, `ctrl+c` |
 | `help` | `?` |
-| `next_tab` / `prev_tab` | `tab` / `shift+tab` |
+| `next_tab` / `prev_tab` | `tab`, `right` / `shift+tab`, `left` |
 | `tab_1` … `tab_9` | `1` … `9` |
 | `history` | `h` |
 | `refresh` | `r` |
 | `filter` / `search` | `f` / `/` |
 | `select` / `back` | `enter` / `esc` |
 | `up` / `down` | `up`, `k` / `down`, `j` |
-| `left` / `right` | `left` / `right`, `l` |
+| `left` / `right` | — / `l` |
 | `page_up` / `page_down` | `pgup`, `ctrl+u` / `pgdown`, `ctrl+d` |
 | `home` / `end` | `home`, `g` / `end`, `G` |
 | `zoom_in` / `zoom_out` | `+`, `=` / `-`, `_` |
@@ -87,7 +87,7 @@ shows the problem in the footer.
 
 | Key | Default | Description |
 |---|---|---|
-| `providers` | `[auto]` | `auto` or `nvidia`. |
+| `providers` | `[auto]` | `auto`, `nvidia` or `apple`. `auto` detects the platform: Apple silicon GPU on macOS, NVIDIA (NVML) elsewhere. |
 | `idle_threshold` | `5` | Utilization (%) below which a GPU is idle. |
 | `idle_after` | `5m` | Idle duration before an allocated GPU is flagged. |
 | `outlier_min_delta` | `20` | Minimum gap (percentage points) below the cohort median for a straggler. |
@@ -148,3 +148,4 @@ shows the problem in the footer.
 | `default_tab` | `overview` | Tab shown at start (`overview`, `gpus`, `processes`, `history`, …). |
 | `temperature_unit` | `c` | `c` or `f`. |
 | `show_command_lines` | `false` | Add a COMMAND column to the process table. |
+| `mouse` | `true` | Mouse support: click tabs, rows (double-click opens detail), column headers (sort) and footer hints; scroll with the wheel. Hold Shift (Option in macOS Terminal/iTerm2) to select text. |

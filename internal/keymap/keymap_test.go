@@ -13,7 +13,7 @@ func TestDefaults(t *testing.T) {
 	cases := map[string]Action{
 		"q": Quit, "ctrl+c": Quit, "?": Help, "tab": NextTab, "shift+tab": PrevTab,
 		"h": History, "r": Refresh, "f": Filter, "/": Search, "enter": Select, "esc": Back,
-		"up": Up, "down": Down, "left": Left, "right": Right, "+": ZoomIn, "-": ZoomOut,
+		"up": Up, "down": Down, "left": PrevTab, "right": NextTab, "l": Right, "+": ZoomIn, "-": ZoomOut,
 		"1": Tab1, "9": Tab9, "G": End, "g": Home, " ": Pause,
 	}
 	for k, want := range cases {

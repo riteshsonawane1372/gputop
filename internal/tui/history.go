@@ -484,7 +484,7 @@ func fmtVal(v float64, unit string) string {
 	case "°C":
 		return fmt.Sprintf("%.0f°C", v)
 	case "W":
-		return fmt.Sprintf("%.0f W", v)
+		return fmtWatts(v)
 	case "MHz":
 		return fmt.Sprintf("%.0f MHz", v)
 	case "GiB":

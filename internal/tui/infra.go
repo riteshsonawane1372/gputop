@@ -163,7 +163,7 @@ func (m *Model) remoteNodes(nodes []NodeSummary, w, h int) widgets.Block {
 		{Title: "HEALTH", Width: 6, Align: widgets.Right},
 		{Title: "ALERTS", Width: 6, Align: widgets.Right},
 		{Title: "ADDRESS", Width: 30, Min: 10, Flex: true, Priority: 1},
-	}, Selected: m.nodesSel, SortCol: -1}
+	}, Selected: m.nodesSel, SortCol: -1, RowMark: m.listRowMark("node:", &m.nodesSel)}
 	for _, n := range nodes {
 		row := []widgets.Cell{widgets.C(th.Text, n.Name)}
 		if !n.OK || n.Snapshot == nil {
@@ -265,6 +265,7 @@ func viewKube(m *Model, w, h int) widgets.Block {
 	}
 	m.kubeSel = widgets.Scroll(m.kubeSel, 0, len(tb.Rows))
 	tb.Selected = m.kubeSel
+	tb.RowMark = m.listRowMark("kube:", &m.kubeSel)
 	if len(tb.Rows) == 0 {
 		tb.Selected = -1
 	}
@@ -322,7 +323,7 @@ func viewWorkloads(m *Model, w, h int) widgets.Block {
 		{Title: "WORKLOAD", Width: 30, Min: 12, Flex: true},
 		{Title: "GPUS", Width: 12, Min: 4},
 		{Title: "PROCS", Width: 5, Align: widgets.Right, Priority: 3},
-		{Title: "VRAM", Width: 10, Align: widgets.Right},
+		{Title: m.memTitle(), Width: 10, Align: widgets.Right},
 		{Title: "UTIL (5m)", Width: 14, Min: 5},
 		{Title: "EFFICIENCY", Width: 14, Priority: 1},
 		{Title: "SIGNALS", Width: 28, Min: 8, Flex: true, Priority: 2},
@@ -398,6 +399,7 @@ func viewWorkloads(m *Model, w, h int) widgets.Block {
 	}
 	m.workSel = widgets.Scroll(m.workSel, 0, len(tb.Rows))
 	tb.Selected = m.workSel
+	tb.RowMark = m.listRowMark("workload:", &m.workSel)
 	note := []string{th.Dim.Render(" Efficiency is a gputop-derived utilization indicator (compute, bandwidth, VRAM, throttling), not throughput.")}
 	content := append(tb.Render(th, w-2, h-4), note...)
 	return widgets.Box(th, widgets.BoxOpts{Title: "Workloads", RightTitle: fmt.Sprintf("%d groups", len(tb.Rows)), Focus: true}, w, h, content)
@@ -498,6 +500,7 @@ func viewNetwork(m *Model, w, h int) widgets.Block {
 	}
 	m.netSel = widgets.Scroll(m.netSel, 0, len(tb.Rows))
 	tb.Selected = m.netSel
+	tb.RowMark = m.listRowMark("net:", &m.netSel)
 	right := ""
 	if hidden > 0 {
 		right = fmt.Sprintf("%d virtual/loopback hidden (f → kind:all)", hidden)
@@ -568,7 +571,7 @@ func viewEvents(m *Model, w, h int) widgets.Block {
 		{Title: "KIND", Width: 18, Priority: 1},
 		{Title: "MESSAGE", Width: 40, Min: 20, Flex: true},
 		{Title: "SOURCE", Width: 9, Priority: 2},
-	}, Selected: m.events.sel, SortCol: 0, SortDesc: true}
+	}, Selected: m.events.sel, SortCol: 0, SortDesc: true, RowMark: m.listRowMark("event:", &m.events.sel)}
 	if len(evs) == 0 {
 		tb.Selected = -1
 	}
@@ -633,6 +636,7 @@ func viewHealth(m *Model, w, h int) widgets.Block {
 		}, SortCol: -1}
 		widths := tb.Layout(ws[0] - 2)
 		_, tb.Selected = m.selected()
+		tb.RowMark = m.gpuRowMark()
 		for i := range s.GPUs {
 			g := &s.GPUs[i]
 			hs := m.healthStyle(g.Health.Score)
@@ -674,7 +678,7 @@ func viewHealth(m *Model, w, h int) widgets.Block {
 			rl = append(rl, st.Render(glyph+" "+who)+th.Text.Render(a.Title)+th.Dim.Render(" · since "+a.Since.Local().Format("15:04:05")))
 		}
 		rl = append(rl, "", th.Dim.Render("The score is a transparent heuristic built from ECC, row remapping, Xid, thermal,"),
-			th.Dim.Render("power-brake, PCIe and NVLink signals. It is not an NVIDIA metric. See docs/health-score.md."))
+			th.Dim.Render("power-brake, PCIe and NVLink signals. It is not a vendor metric. See docs/health-score.md."))
 		right := widgets.Box(th, widgets.BoxOpts{Title: "Why"}, ws[1], topH, rl)
 		top = widgets.HJoin(th, left, right)
 	} else {

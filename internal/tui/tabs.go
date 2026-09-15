@@ -32,7 +32,7 @@ func allTabs() []*tabDef {
 		{id: "power", title: "Power", visible: hasGPUs, view: viewPower, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "thermals", title: "Thermals", visible: hasGPUs, view: viewThermals, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "nvlink", title: "NVLink", visible: func(m *Model) bool { return m.view().HasLinks() }, view: viewNVLink, keys: keysGPUSelect, hints: hintsGPUSelect},
-		{id: "pcie", title: "PCIe", visible: hasGPUs, view: viewPCIe, keys: keysGPUSelect, hints: hintsGPUSelect},
+		{id: "pcie", title: "PCIe", visible: hasPCIe, view: viewPCIe, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "mig", title: "MIG", visible: func(m *Model) bool { return m.view().HasPartitioning() }, view: viewMIG, keys: keysGPUSelect, hints: hintsGPUSelect},
 		{id: "nodes", title: "Nodes", view: viewNodes, keys: keysNodes},
 		{id: "kubernetes", title: "Kubernetes", visible: kubeVisible, view: viewKube, keys: keysKube, searchable: true},

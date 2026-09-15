@@ -6,7 +6,8 @@ gputop is to GPUs what btop is to hosts: a dense, low-overhead TUI that answers
 *"what is happening with my GPUs right now?"* and, with its built-in time
 machine, *"what happened 15 minutes ago?"*
 
-It currently supports **NVIDIA GPUs** through NVML, on a vendor-neutral core
+It supports **NVIDIA GPUs** through NVML on Linux and **Apple silicon GPUs**
+(M1 and later) on macOS, detected automatically, on a vendor-neutral core
 designed for AMD, Intel and other accelerators.
 
 ## Screenshots
@@ -129,7 +130,9 @@ gputop is pre-1.0. Features are marked as:
 | Area | Status |
 |---|---|
 | NVIDIA via NVML: utilization, memory, power, energy, temperatures, clocks, throttle reasons, PCIe, NVLink, MIG, ECC, row remapping, retired pages, Xid events, processes | ✅ |
+| Apple silicon via IOKit/IOReport/SMC (no root, no cgo): utilization, unified-memory use, power, energy, frequency, temperature, per-process GPU time | 🧪 |
 | Interactive TUI: 16 tabs, sorting, search, filters, detail views, resizing (80×24 and up) | ✅ |
+| Mouse: click tabs, rows, column headers and hints; double-click for detail; wheel scrolling | ✅ |
 | Custom themes and key bindings | ✅ |
 | History: 30-minute default, configurable retention, on-disk persistence, charts, time scrubbing | ✅ |
 | Host CPU, RAM, disks, network and InfiniBand counters | ✅ |
@@ -142,7 +145,7 @@ gputop is pre-1.0. Features are marked as:
 | Remote TUI (`--remote`) and remote node summaries | 🧪 |
 | `--demo` simulated GPUs | ✅ |
 | NVIDIA DCGM (per-MIG utilization, profiling metrics) | 🗺 |
-| AMD, Intel and Apple Silicon providers | 🗺 |
+| AMD and Intel providers | 🗺 |
 | Kubelet pod-resources API (allocation without running processes) | 🗺 |
 | deb/rpm/Homebrew packages, container image | 🗺 |
 
@@ -155,18 +158,24 @@ gputop is pre-1.0. Features are marked as:
 
 ## Installation
 
-Pre-built binaries for Linux and macOS (amd64, arm64) are attached to each
-[GitHub release](https://github.com/gputop/gputop/releases). Download the
-archive for your platform plus `checksums.txt`, then:
+Every [GitHub release](https://github.com/gputop/gputop/releases) attaches a
+ready-to-run executable per platform (`gputop-linux-amd64`,
+`gputop-linux-arm64`, `gputop-darwin-arm64`, `gputop-darwin-amd64`) plus
+`checksums.txt`:
 
 ```bash
-sha256sum --ignore-missing -c checksums.txt
-tar xzf gputop_<version>_linux_amd64.tar.gz
-sudo install gputop /usr/local/bin/
+curl -fLo gputop https://github.com/gputop/gputop/releases/latest/download/gputop-linux-amd64
+chmod +x gputop && sudo install gputop /usr/local/bin/
 ```
 
-Every push to `main` also refreshes the pre-release packages in the
-[latest main build](https://github.com/gputop/gputop/releases/tag/main-build).
+On macOS, clear the quarantine flag after downloading: `xattr -d com.apple.quarantine gputop`.
+
+Releases follow [semantic versioning](https://semver.org/):
+
+- **Stable** releases (`v0.1.0`) are marked *Latest*.
+- Every push to `main` publishes a **prerelease** named after the next patch
+  version and the number of commits since the last stable release, for example
+  `v0.0.2-main.7`.
 
 With Go 1.25 or newer:
 
@@ -193,8 +202,12 @@ make build
 - **Containers:** run with the NVIDIA Container Toolkit (`--gpus all`,
   `NVIDIA_DRIVER_CAPABILITIES=utility`) and with `--pid=host` / `hostPID: true`
   so that host PIDs reported by NVML can be resolved.
-- **macOS:** builds and runs (host metrics, `--demo`, `--remote`). NVIDIA no
-  longer ships macOS drivers, so there is no local NVIDIA monitoring.
+- **macOS (Apple silicon, M1 or later)** for the integrated GPU. Nothing to
+  install and no root needed: utilization and GPU memory come from IOKit, power
+  and frequency from IOReport, temperature from the SMC. Apple does not expose
+  ECC, PCIe, power limits, throttle reasons or per-process GPU memory, so those
+  tabs and columns are hidden. Intel Macs run host monitoring, `--demo` and
+  `--remote`.
 - The Linux binary is built without cgo and loads NVML with `dlopen`. It needs a
   glibc-compatible dynamic loader (on Alpine, install `gcompat`).
 - Terminal: 256-color or truecolor recommended; minimum 60×15, full layout from
@@ -203,7 +216,7 @@ make build
 ## Usage
 
 ```bash
-gputop                        # interactive TUI
+gputop                        # interactive TUI (NVIDIA on Linux, Apple GPU on macOS)
 gputop --demo                 # simulated GPUs: explore without hardware
 gputop --once                 # one-shot text summary (exit code 3 when no GPU is found)
 gputop --once --json          # one JSON snapshot
@@ -229,8 +242,8 @@ All bindings are configurable (see [Configuration](#configuration)).
 | Key | Action | Key | Action |
 |---|---|---|---|
 | `q` / `ctrl+c` | quit | `?` | help |
-| `Tab` / `Shift+Tab` | next / previous tab | `1`…`9` | jump to tab |
-| `↑` `↓` / `j` `k` | move | `←` `→` | move / change sort |
+| `→` / `Tab` | next tab | `←` / `Shift+Tab` | previous tab |
+| `↑` `↓` / `j` `k` | move | `1`…`9` | jump to tab |
 | `Enter` | open detail | `Esc` | back / clear filters |
 | `/` | search | `f` | filter, e.g. `gpu:0 user:alice ns:ml sev:critical kind:all` |
 | `s` / `S` | next sort column / reverse | `PgUp` `PgDn` `g` `G` | page / first / last |
@@ -238,6 +251,13 @@ All bindings are configurable (see [Configuration](#configuration)).
 | `p` / `space` | pause display (collection continues) | `[` `]` | previous / next GPU |
 | `+` / `-` | zoom history window | `m` / `M` | next / previous metric |
 | `,` / `.` | scrub back / forward in time | `n` | jump to now |
+
+**Mouse** (disable with `ui.mouse: false`): click a tab to open it, click a row
+to select it, double-click a row for its detail, click a column header to sort,
+click a footer hint to run it. The wheel scrolls panes under the pointer (such
+as the GPU detail in the GPUs tab, which also pages with `PgUp`/`PgDn`) and
+otherwise moves the selection. Hold Shift (Option in macOS Terminal/iTerm2) to
+select text.
 
 ## Tabs
 

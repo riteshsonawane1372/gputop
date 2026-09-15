@@ -6,6 +6,35 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-09-15
+
+### Added
+
+- Apple silicon provider (macOS, M1 and later), selected automatically by
+  `gpu.providers: [auto]`: device utilization and GPU memory in use from IOKit,
+  GPU power, energy and average active frequency from IOReport, GPU die
+  temperature from the SMC, and per-process GPU time from Metal user clients.
+  No root and no cgo. The UI adapts to Apple GPUs: unified-memory labels,
+  Apple-specific Memory, Power and Thermals tables, and no PCIe/NVLink/MIG tabs.
+- Process metadata (name, user, command line, start time) on macOS.
+- Mouse support: click tabs, table rows, column headers and footer hints;
+  double-click rows for details; wheel scrolling (`ui.mouse`, on by default).
+- The GPU detail pane in the GPUs tab scrolls (`PgUp`/`PgDn`, mouse wheel) and
+  shows a scrollbar.
+- Semantic prereleases (`vX.Y.Z-main.N`) with binaries for every platform on
+  each push to `main`; stable releases from tags or a manual workflow run.
+  Releases attach ready-to-run executables (`gputop-<os>-<arch>`) instead of
+  archives.
+
+### Changed
+
+- `←` / `→` switch to the previous / next tab. GPU selection keeps `[` / `]`
+  (and `↑` / `↓`); process sorting keeps `s` / `S`.
+- `gpu.providers: [auto]` selects the Apple provider on macOS instead of NVIDIA.
+- The rolling `main-build` prerelease is replaced by semantic prereleases.
+
+## [0.0.1] - 2026-09-15
+
 ### Added
 
 - Interactive TUI with 16 tabs (Overview, GPUs, Processes, Memory, Power,
@@ -44,3 +73,7 @@ All notable changes to this project are documented here. The format follows
   configurable key bindings.
 - CI (lint, race tests on Linux amd64/arm64 and macOS, cross-compilation, NVML
   ABI test, smoke tests, GoReleaser check) and a GoReleaser release workflow.
+
+[Unreleased]: https://github.com/riteshsonawane1372/gputop/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/riteshsonawane1372/gputop/compare/v0.0.1...v0.1.0
+[0.0.1]: https://github.com/riteshsonawane1372/gputop/releases/tag/v0.0.1

@@ -31,13 +31,17 @@ func keysGPUs(m *Model, a keymap.Action) (bool, tea.Cmd) {
 		case keymap.Back:
 			st.detail, st.scroll = false, 0
 		case keymap.Up:
-			st.scroll = max(0, st.scroll-1)
+			m.scrollGPUs(-1)
 		case keymap.Down:
-			st.scroll = min(st.maxScroll, st.scroll+1)
+			m.scrollGPUs(1)
 		case keymap.PageUp:
-			st.scroll = max(0, st.scroll-10)
+			m.scrollGPUs(-10)
 		case keymap.PageDown:
-			st.scroll = min(st.maxScroll, st.scroll+10)
+			m.scrollGPUs(10)
+		case keymap.Home:
+			st.scroll = 0
+		case keymap.End:
+			st.scroll = st.maxScroll
 		case keymap.PrevGPU, keymap.Left:
 			m.moveGPU(-1)
 		case keymap.NextGPU, keymap.Right:
@@ -47,18 +51,32 @@ func keysGPUs(m *Model, a keymap.Action) (bool, tea.Cmd) {
 		}
 		return true, nil
 	}
-	if a == keymap.Select {
+	switch a {
+	case keymap.Select:
 		st.detail, st.scroll = true, 0
+		return true, nil
+	// In the list view arrows pick the GPU and paging scrolls its detail pane.
+	case keymap.PageUp:
+		m.scrollGPUs(-10)
+		return true, nil
+	case keymap.PageDown:
+		m.scrollGPUs(10)
 		return true, nil
 	}
 	return keysGPUSelect(m, a)
+}
+
+// scrollGPUs scrolls the GPU detail (full view or the pane beside the list).
+func (m *Model) scrollGPUs(delta int) {
+	st := &m.gpus
+	st.scroll = max(0, min(st.maxScroll, st.scroll+delta))
 }
 
 func hintsGPUs(m *Model) []hint {
 	if m.gpus.detail {
 		return []hint{{keymap.Back, "back"}, {keymap.NextGPU, "next GPU"}, {keymap.Down, "scroll"}, {keymap.History, "history"}}
 	}
-	return []hint{{keymap.Up, "select"}, {keymap.Select, "full detail"}, {keymap.History, "history"}}
+	return []hint{{keymap.Up, "select"}, {keymap.PageDown, "scroll detail"}, {keymap.Select, "full detail"}, {keymap.History, "history"}}
 }
 
 func viewGPUs(m *Model, w, h int) widgets.Block {
@@ -75,17 +93,14 @@ func viewGPUs(m *Model, w, h int) widgets.Block {
 			cols = 2
 		}
 		secs := m.gpuSections(g, w/cols-2, true)
-		block, maxScroll := m.flowSections(secs, w, h, cols, m.gpus.scroll, "")
-		m.gpus.maxScroll = maxScroll
-		return block
+		return m.gpuDetailPane(secs, w, h, cols)
 	}
 	s := m.view()
 	if w < 110 {
 		listH := min(len(s.GPUs)+3, h/2)
 		list := m.gpuList(s, w, listH)
 		secs := m.gpuSections(g, w-2, false)
-		detail, _ := m.flowSections(secs, w, h-listH, 1, 0, "")
-		return widgets.VJoin(list, detail)
+		return widgets.VJoin(list, m.gpuDetailPane(secs, w, h-listH, 1))
 	}
 	ws := widgets.Split(w, 9, 11)
 	list := m.gpuList(s, ws[0], h)
@@ -94,8 +109,32 @@ func viewGPUs(m *Model, w, h int) widgets.Block {
 		cols = 2
 	}
 	secs := m.gpuSections(g, ws[1]/cols-2, false)
-	detail, _ := m.flowSections(secs, ws[1], h, cols, 0, "")
-	return widgets.HJoin(m.th, list, detail)
+	return widgets.HJoin(m.th, list, m.gpuDetailPane(secs, ws[1], h, cols))
+}
+
+// gpuDetailPane renders scrollable detail sections with a scrollbar. The
+// mouse wheel over the pane scrolls it; a double-click opens the full view.
+func (m *Model) gpuDetailPane(secs []section, w, h, cols int) widgets.Block {
+	st := &m.gpus
+	block, maxScroll := m.flowSections(secs, w, h, cols, st.scroll, "")
+	st.maxScroll = maxScroll
+	st.scroll = min(st.scroll, maxScroll)
+	block = widgets.Scrollbar(m.th, block, st.scroll, maxScroll)
+	if !m.mouse {
+		return block
+	}
+	for i, l := range block {
+		block[i] = m.zones.markWheel("gpus:pane", l, func(dbl bool) tea.Cmd {
+			if dbl && !st.detail {
+				return m.dispatch(keymap.Select, "")
+			}
+			return nil
+		}, func(delta int) tea.Cmd {
+			m.scrollGPUs(delta)
+			return nil
+		})
+	}
+	return block
 }
 
 func (m *Model) gpuList(s *model.Snapshot, w, h int) widgets.Block {
@@ -105,7 +144,7 @@ func (m *Model) gpuList(s *model.Snapshot, w, h int) widgets.Block {
 			{Title: "#", Width: 2, Align: widgets.Right},
 			{Title: "NAME", Width: 14, Min: 6, Flex: true, Priority: 3},
 			{Title: "UTIL", Width: 12, Min: 8},
-			{Title: "VRAM", Width: 10, Min: 8},
+			{Title: m.memTitle(), Width: 10, Min: 8},
 			{Title: "TEMP", Width: 5, Align: widgets.Right, Priority: 1},
 			{Title: "HLTH", Width: 4, Align: widgets.Right, Priority: 2},
 			{Title: "STATE", Width: 8},
@@ -114,6 +153,7 @@ func (m *Model) gpuList(s *model.Snapshot, w, h int) widgets.Block {
 	}
 	widths := tb.Layout(w - 2)
 	_, tb.Selected = m.selected()
+	tb.RowMark = m.gpuRowMark()
 	for i := range s.GPUs {
 		g := &s.GPUs[i]
 		frac := g.Derived.VRAMFraction
@@ -132,6 +172,9 @@ func (m *Model) gpuList(s *model.Snapshot, w, h int) widgets.Block {
 
 // gpuSections builds the detail view of one GPU.
 func (m *Model) gpuSections(g *model.GPU, cw int, full bool) []section {
+	if g.Device.Vendor == gpu.VendorApple {
+		return m.appleSections(g, cw, full)
+	}
 	th := m.th
 	s := m.view()
 	d := g.Device
@@ -368,39 +411,47 @@ func (m *Model) gpuSections(g *model.GPU, cw int, full bool) []section {
 	}
 
 	if full {
-		id := string(d.ID)
-		chW := max(10, cw-2)
-		var ch []string
-		ch = append(ch, th.Dim.Render("utilization % (live)"))
-		ch = append(ch, widgets.Chart(th, m.live.values("util/"+id, 0), chW, 3, widgets.ChartOpts{Min: 0, Max: 100, Cursor: -1})...)
-		ch = append(ch, th.Dim.Render("power W (live)"))
-		ch = append(ch, widgets.Chart(th, m.live.values("power/"+id, 0), chW, 3, widgets.ChartOpts{Min: 0, Max: smp.PowerLimitW.Or(0), Cursor: -1})...)
-		ch = append(ch, th.Dim.Render("temperature °C (live)"))
-		ch = append(ch, widgets.Chart(th, m.live.values("temp/"+id, 0), chW, 2, widgets.ChartOpts{Cursor: -1})...)
-		secs = append(secs, section{"Trends", ch})
+		secs = append(secs, m.trendSections(g, cw)...)
+	}
+	return secs
+}
 
-		var caps []string
-		keys := make([]string, 0, len(d.Capabilities))
-		for k := range d.Capabilities {
-			keys = append(keys, string(k))
+// trendSections are the live charts and capability list of the full detail view.
+func (m *Model) trendSections(g *model.GPU, cw int) []section {
+	th := m.th
+	d, smp := g.Device, g.Sample
+	id := string(d.ID)
+	chW := max(10, cw-2)
+	var ch []string
+	ch = append(ch, th.Dim.Render("utilization % (live)"))
+	ch = append(ch, widgets.Chart(th, m.live.values("util/"+id, 0), chW, 3, widgets.ChartOpts{Min: 0, Max: 100, Cursor: -1})...)
+	ch = append(ch, th.Dim.Render("power W (live)"))
+	ch = append(ch, widgets.Chart(th, m.live.values("power/"+id, 0), chW, 3, widgets.ChartOpts{Min: 0, Max: smp.PowerLimitW.Or(0), Cursor: -1})...)
+	ch = append(ch, th.Dim.Render("temperature °C (live)"))
+	ch = append(ch, widgets.Chart(th, m.live.values("temp/"+id, 0), chW, 2, widgets.ChartOpts{Cursor: -1})...)
+	secs := []section{{"Trends", ch}}
+
+	var caps []string
+	keys := make([]string, 0, len(d.Capabilities))
+	for k := range d.Capabilities {
+		keys = append(keys, string(k))
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		st := d.Capabilities[gpu.Capability(k)]
+		style := th.OK
+		switch st {
+		case gpu.CapUnsupported:
+			style = th.NA
+		case gpu.CapNoPermission:
+			style = th.Warn
+		case gpu.CapUnknown:
+			style = th.Muted
 		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			st := d.Capabilities[gpu.Capability(k)]
-			style := th.OK
-			switch st {
-			case gpu.CapUnsupported:
-				style = th.NA
-			case gpu.CapNoPermission:
-				style = th.Warn
-			case gpu.CapUnknown:
-				style = th.Muted
-			}
-			caps = append(caps, m.kv(k, style.Render(string(st)), 22))
-		}
-		if len(caps) > 0 {
-			secs = append(secs, section{"Capabilities", caps})
-		}
+		caps = append(caps, m.kv(k, style.Render(string(st)), 22))
+	}
+	if len(caps) > 0 {
+		secs = append(secs, section{"Capabilities", caps})
 	}
 	return secs
 }

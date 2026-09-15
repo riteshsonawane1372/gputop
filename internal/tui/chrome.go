@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/gputop/gputop/internal/keymap"
 	"github.com/gputop/gputop/internal/model"
 	"github.com/gputop/gputop/internal/tui/widgets"
@@ -111,6 +112,15 @@ func (m *Model) viewTabBar(w int) string {
 		} else {
 			labels[i] = th.TabInactive.Render(" ") + th.Key.Render(num) + th.TabInactive.Render(t.title+" ")
 		}
+		id := t.id
+		labels[i] = m.zone("tab:"+id, labels[i], func(bool) tea.Cmd {
+			if m.activeID == id {
+				return nil
+			}
+			m.activeID = id
+			m.onEnterTab()
+			return m.enterCmd()
+		})
 	}
 	// Fit a window of tabs around the active one.
 	total := 0
@@ -160,15 +170,26 @@ func (m *Model) viewFooter(w int) string {
 
 	var parts []string
 	add := func(a keymap.Action, label string) {
-		if k := m.keys.Label(a); k != "" {
-			parts = append(parts, th.Key.Render(k)+th.Surface.Render(" "+label))
+		k := m.keys.Label(a)
+		if k == "" {
+			return
 		}
+		part := th.Key.Render(k) + th.Surface.Render(" "+label)
+		// Hints run their action when clicked; quitting and plain
+		// movement stay keyboard-only.
+		if a != keymap.Quit && a != keymap.Up && a != keymap.Down {
+			part = m.zone("hint:"+string(a), part, func(bool) tea.Cmd { return m.dispatch(a, "") })
+		}
+		parts = append(parts, part)
 	}
 	t := m.activeTab()
 	if !m.help && t.hints != nil {
 		for _, h := range t.hints(m) {
 			add(h.action, h.label)
 		}
+	}
+	if !m.help && m.keys.Lookup("left") == keymap.PrevTab && m.keys.Lookup("right") == keymap.NextTab {
+		parts = append(parts, th.Key.Render("←→")+th.Surface.Render(" tabs"))
 	}
 	if t.searchable {
 		add(keymap.Search, "search")
@@ -273,10 +294,16 @@ func (m *Model) viewHelp(w, h int) widgets.Block {
 		th.Title.Render("Values"),
 		th.NA.Render("N/A") + th.Dim.Render("  not supported by this GPU/driver"),
 		th.Dim.Render("Health and efficiency scores are gputop-derived"),
-		th.Dim.Render("heuristics, not NVIDIA metrics (see docs/)."),
-		"",
-		th.Title.Render("Tabs"),
+		th.Dim.Render("heuristics, not vendor metrics (see docs/)."),
 	}
+	if m.mouse {
+		legend = append(legend, "",
+			th.Title.Render("Mouse"),
+			th.Dim.Render("click tab · row · header (sort) · hint"),
+			th.Dim.Render("double-click row: detail · wheel: scroll"),
+		)
+	}
+	legend = append(legend, "", th.Title.Render("Tabs"))
 	vis := m.visibleTabs()
 	names := make([]string, len(vis))
 	for i, t := range vis {

@@ -6,6 +6,7 @@ package tui
 import (
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -36,6 +37,8 @@ type procsState struct {
 	sortKey  sortKey
 	sortDesc bool
 	selPID   int
+	// sortChosen is set once the default sort was adapted to the vendor.
+	sortChosen bool
 }
 
 func (m *Model) filteredProcesses() []model.Process {
@@ -114,12 +117,18 @@ func keysProcesses(m *Model, a keymap.Action) (bool, tea.Cmd) {
 		st.sel = max(0, len(procs)-1)
 	case keymap.SortNext, keymap.Right:
 		st.sortKey = (st.sortKey + 1) % numSortKeys
+		if st.sortKey == sortVRAM && m.apple() {
+			st.sortKey++ // Apple reports no per-process GPU memory
+		}
 		st.sortDesc = st.sortKey == sortVRAM || st.sortKey == sortUtil || st.sortKey == sortRuntime
-		m.setToast("sort: "+sortNames[st.sortKey], 1500*time.Millisecond)
+		m.setToast("sort: "+m.sortLabel(st.sortKey), 1500*time.Millisecond)
 	case keymap.Left:
 		st.sortKey = (st.sortKey + numSortKeys - 1) % numSortKeys
+		if st.sortKey == sortVRAM && m.apple() {
+			st.sortKey = numSortKeys - 1
+		}
 		st.sortDesc = st.sortKey == sortVRAM || st.sortKey == sortUtil || st.sortKey == sortRuntime
-		m.setToast("sort: "+sortNames[st.sortKey], 1500*time.Millisecond)
+		m.setToast("sort: "+m.sortLabel(st.sortKey), 1500*time.Millisecond)
 	case keymap.SortReverse:
 		st.sortDesc = !st.sortDesc
 	case keymap.Select:
@@ -159,78 +168,56 @@ func viewProcesses(m *Model, w, h int) widgets.Block {
 	st.sel = widgets.Scroll(st.sel, 0, len(procs))
 	now := m.now()
 
-	cols := []widgets.Column{
-		{Title: "PID", Width: 8, Align: widgets.Right},
-		{Title: "PROCESS", Width: 16, Min: 8},
-		{Title: "USER", Width: 10, Min: 6, Priority: 3},
-		{Title: "GPU", Width: 4, Align: widgets.Right},
-		{Title: "MIG", Width: 4, Align: widgets.Right, Priority: 6},
-		{Title: "VRAM", Width: 10, Align: widgets.Right},
-		{Title: "SM%", Width: 4, Align: widgets.Right},
-		{Title: "MEM%", Width: 4, Align: widgets.Right, Priority: 7},
-		{Title: "RUNTIME", Width: 8, Align: widgets.Right, Priority: 4},
-		{Title: "CONTAINER", Width: 12, Priority: 8},
-		{Title: "POD", Width: 24, Min: 10, Priority: 2, Flex: true},
-		{Title: "NAMESPACE", Width: 12, Priority: 5},
-		{Title: "WORKLOAD", Width: 22, Min: 10, Priority: 9, Flex: true},
+	specs := m.processColumns(now)
+	cols := make([]widgets.Column, len(specs))
+	sortCol := -1
+	for i, c := range specs {
+		cols[i] = c.col
+		if c.sort == st.sortKey && c.sortable {
+			sortCol = i
+		}
 	}
-	if m.showCmd {
-		cols = append(cols, widgets.Column{Title: "COMMAND", Width: 30, Min: 10, Priority: 10, Flex: true})
-	}
-	sortCol := map[sortKey]int{sortPID: 0, sortName: 1, sortGPU: 3, sortVRAM: 5, sortUtil: 6, sortRuntime: 8}[st.sortKey]
 	tb := &widgets.Table{Columns: cols, Selected: st.sel, SortCol: sortCol, SortDesc: st.sortDesc}
 	if len(procs) == 0 {
 		tb.Selected = -1
 	}
+	if m.mouse {
+		tb.RowMark = func(r int, line string) string {
+			pid := procs[r].PID
+			return m.zone("proc:"+strconv.Itoa(pid), line, func(dbl bool) tea.Cmd {
+				st.sel, st.selPID = r, pid
+				if dbl {
+					return m.dispatch(keymap.Select, "")
+				}
+				return nil
+			})
+		}
+		tb.HeaderMark = func(col int, title string) string {
+			c := specs[col]
+			if !c.sortable {
+				return title
+			}
+			return m.zone("sort:"+c.col.Title, title, func(bool) tea.Cmd {
+				if st.sortKey == c.sort {
+					st.sortDesc = !st.sortDesc
+				} else {
+					st.sortKey = c.sort
+					st.sortDesc = c.sort == sortVRAM || c.sort == sortUtil || c.sort == sortRuntime
+				}
+				m.setToast("sort: "+m.sortLabel(st.sortKey), 1500*time.Millisecond)
+				return nil
+			})
+		}
+	}
 	for _, p := range procs {
-		runtime := na
-		if !p.StartTime.IsZero() {
-			runtime = fmtDuration(now.Sub(p.StartTime))
-		}
-		name := p.Name
-		nameStyle := th.Text
-		if !p.Visible && name == "" {
-			name, nameStyle = "?", th.NA
-		}
-		mig := "—"
-		if p.PartitionID != "" {
-			mig = fmt.Sprint(p.PartitionIndex)
-		}
-		wl := "—"
-		if p.Kube.WorkloadName != "" {
-			wl = p.Kube.WorkloadKind + "/" + p.Kube.WorkloadName
-			if p.Kube.Inferred {
-				wl += "?"
-			}
-		}
-		dash := func(s string) string {
-			if s == "" {
-				return "—"
-			}
-			return s
-		}
-		row := []widgets.Cell{
-			widgets.C(th.Dim, fmt.Sprint(p.PID)),
-			widgets.C(nameStyle, name),
-			widgets.C(th.Dim, dash(p.User)),
-			widgets.C(th.Accent, fmt.Sprint(p.DeviceIndex)),
-			widgets.C(th.Dim, mig),
-			widgets.R(m.naOr(optBytes(p.MemUsed), th.Text)),
-			widgets.R(m.naOr(optF(p.SMUtil, "%.0f"), th.Gradient(p.SMUtil.V/100))),
-			widgets.R(m.naOr(optF(p.MemUtil, "%.0f"), th.Text)),
-			widgets.C(th.Dim, runtime),
-			widgets.C(th.Dim, dash(kube.ShortID(p.Kube.ContainerID))),
-			widgets.C(th.Text, dash(p.Kube.PodName)),
-			widgets.C(th.Dim, dash(p.Kube.Namespace)),
-			widgets.C(th.Dim, wl),
-		}
-		if m.showCmd {
-			row = append(row, widgets.C(th.Dim, p.Command))
+		row := make([]widgets.Cell, len(specs))
+		for i, c := range specs {
+			row[i] = c.cell(p)
 		}
 		tb.Rows = append(tb.Rows, row)
 	}
 
-	right := fmt.Sprintf("%d of %d · sort %s", len(procs), len(m.view().Processes), sortNames[st.sortKey])
+	right := fmt.Sprintf("%d of %d · sort %s", len(procs), len(m.view().Processes), m.sortLabel(st.sortKey))
 	content := tb.Render(th, w-2, h-2)
 	if len(procs) == 0 {
 		msg := "No GPU processes"
@@ -249,6 +236,118 @@ func viewProcesses(m *Model, w, h int) widgets.Block {
 		st.detail = false
 	}
 	return box
+}
+
+// sortLabel is the display name of a sort key.
+func (m *Model) sortLabel(k sortKey) string {
+	if k == sortUtil && m.apple() {
+		return "GPU%"
+	}
+	return sortNames[k]
+}
+
+type procColumn struct {
+	col      widgets.Column
+	sort     sortKey
+	sortable bool
+	cell     func(p model.Process) widgets.Cell
+}
+
+// processColumns lists the process table columns for the GPUs in view.
+func (m *Model) processColumns(now time.Time) []procColumn {
+	th := m.th
+	dash := func(s string) string {
+		if s == "" {
+			return "—"
+		}
+		return s
+	}
+	col := func(c widgets.Column, cell func(p model.Process) widgets.Cell) procColumn {
+		return procColumn{col: c, cell: cell}
+	}
+	sortBy := func(k sortKey, c widgets.Column, cell func(p model.Process) widgets.Cell) procColumn {
+		return procColumn{col: c, sort: k, sortable: true, cell: cell}
+	}
+	pid := sortBy(sortPID, widgets.Column{Title: "PID", Width: 8, Align: widgets.Right}, func(p model.Process) widgets.Cell {
+		return widgets.C(th.Dim, fmt.Sprint(p.PID))
+	})
+	name := sortBy(sortName, widgets.Column{Title: "PROCESS", Width: 16, Min: 8}, func(p model.Process) widgets.Cell {
+		if !p.Visible && p.Name == "" {
+			return widgets.C(th.NA, "?")
+		}
+		return widgets.C(th.Text, p.Name)
+	})
+	user := col(widgets.Column{Title: "USER", Width: 10, Min: 6, Priority: 3}, func(p model.Process) widgets.Cell {
+		return widgets.C(th.Dim, dash(p.User))
+	})
+	util := func(title string) procColumn {
+		return sortBy(sortUtil, widgets.Column{Title: title, Width: max(4, len(title)+1), Align: widgets.Right}, func(p model.Process) widgets.Cell {
+			return widgets.R(m.naOr(optF(p.SMUtil, "%.0f"), th.Gradient(p.SMUtil.V/100)))
+		})
+	}
+	runtime := sortBy(sortRuntime, widgets.Column{Title: "RUNTIME", Width: 8, Align: widgets.Right, Priority: 4}, func(p model.Process) widgets.Cell {
+		if p.StartTime.IsZero() {
+			return widgets.C(th.Dim, na)
+		}
+		return widgets.C(th.Dim, fmtDuration(now.Sub(p.StartTime)))
+	})
+	command := col(widgets.Column{Title: "COMMAND", Width: 30, Min: 10, Priority: 10, Flex: true}, func(p model.Process) widgets.Cell {
+		return widgets.C(th.Dim, p.Command)
+	})
+
+	if m.apple() {
+		// One integrated GPU, no per-process memory and no containers.
+		cols := []procColumn{pid, name, user, util("GPU%"), runtime}
+		cols[1].col.Width, cols[1].col.Flex = 28, true
+		if m.showCmd {
+			cols = append(cols, command)
+		}
+		return cols
+	}
+
+	cols := []procColumn{
+		pid, name, user,
+		sortBy(sortGPU, widgets.Column{Title: "GPU", Width: 4, Align: widgets.Right}, func(p model.Process) widgets.Cell {
+			return widgets.C(th.Accent, fmt.Sprint(p.DeviceIndex))
+		}),
+		col(widgets.Column{Title: "MIG", Width: 4, Align: widgets.Right, Priority: 6}, func(p model.Process) widgets.Cell {
+			if p.PartitionID == "" {
+				return widgets.C(th.Dim, "—")
+			}
+			return widgets.C(th.Dim, fmt.Sprint(p.PartitionIndex))
+		}),
+		sortBy(sortVRAM, widgets.Column{Title: "VRAM", Width: 10, Align: widgets.Right}, func(p model.Process) widgets.Cell {
+			return widgets.R(m.naOr(optBytes(p.MemUsed), th.Text))
+		}),
+		util("SM%"),
+		col(widgets.Column{Title: "MEM%", Width: 4, Align: widgets.Right, Priority: 7}, func(p model.Process) widgets.Cell {
+			return widgets.R(m.naOr(optF(p.MemUtil, "%.0f"), th.Text))
+		}),
+		runtime,
+		col(widgets.Column{Title: "CONTAINER", Width: 12, Priority: 8}, func(p model.Process) widgets.Cell {
+			return widgets.C(th.Dim, dash(kube.ShortID(p.Kube.ContainerID)))
+		}),
+		col(widgets.Column{Title: "POD", Width: 24, Min: 10, Priority: 2, Flex: true}, func(p model.Process) widgets.Cell {
+			return widgets.C(th.Text, dash(p.Kube.PodName))
+		}),
+		col(widgets.Column{Title: "NAMESPACE", Width: 12, Priority: 5}, func(p model.Process) widgets.Cell {
+			return widgets.C(th.Dim, dash(p.Kube.Namespace))
+		}),
+		col(widgets.Column{Title: "WORKLOAD", Width: 22, Min: 10, Priority: 9, Flex: true}, func(p model.Process) widgets.Cell {
+			if p.Kube.WorkloadName == "" {
+				return widgets.C(th.Dim, "—")
+			}
+			wl := p.Kube.WorkloadKind + "/" + p.Kube.WorkloadName
+			if p.Kube.Inferred {
+				wl += "?"
+			}
+			return widgets.C(th.Dim, wl)
+		}),
+	}
+	if m.showCmd {
+		cols = append(cols, command)
+	}
+	return cols
 }
 
 func (m *Model) processDetail(p model.Process, w int) widgets.Block {
@@ -277,32 +376,41 @@ func (m *Model) processDetail(p model.Process, w int) widgets.Block {
 	}
 	lines = append(lines,
 		kv("Type", t(string(p.Type))),
-		kv("VRAM", m.naOr(optBytes(p.MemUsed), th.Text)),
-		kv("SM / MEM util", m.naOr(optPct(p.SMUtil), th.Text)+th.Dim.Render(" / ")+m.naOr(optPct(p.MemUtil), th.Text)),
-		kv("ENC / DEC util", m.naOr(optPct(p.EncUtil), th.Text)+th.Dim.Render(" / ")+m.naOr(optPct(p.DecUtil), th.Text)),
 	)
+	if m.apple() {
+		lines = append(lines, kv("GPU time", m.naOr(optPct(p.SMUtil), th.Text)+th.Dim.Render(" of wall time")))
+	} else {
+		lines = append(lines,
+			kv("VRAM", m.naOr(optBytes(p.MemUsed), th.Text)),
+			kv("SM / MEM util", m.naOr(optPct(p.SMUtil), th.Text)+th.Dim.Render(" / ")+m.naOr(optPct(p.MemUtil), th.Text)),
+			kv("ENC / DEC util", m.naOr(optPct(p.EncUtil), th.Text)+th.Dim.Render(" / ")+m.naOr(optPct(p.DecUtil), th.Text)),
+		)
+	}
 	if !p.StartTime.IsZero() {
 		lines = append(lines, kv("Started", t(p.StartTime.Local().Format("2006-01-02 15:04:05")+" ("+fmtDuration(m.now().Sub(p.StartTime))+" ago)")))
 	}
 	if p.Reason != "" {
 		lines = append(lines, kv("Note", th.Warn.Render(p.Reason)))
 	}
-	lines = append(lines, "", th.Title.Render("Correlation"),
-		kv("Container", t(p.Kube.ContainerID)),
-		kv("Runtime", t(p.Kube.Runtime)),
-		kv("Pod", t(p.Kube.PodName)),
-		kv("Pod UID", t(p.Kube.PodUID)),
-		kv("Namespace", t(p.Kube.Namespace)),
-		kv("Container name", t(p.Kube.Container)),
-	)
-	wl := ""
-	if p.Kube.WorkloadName != "" {
-		wl = p.Kube.WorkloadKind + "/" + p.Kube.WorkloadName
-		if p.Kube.Inferred {
-			wl += th.Dim.Render("  (inferred from pod name)")
+	// Container correlation is meaningless for a Mac's desktop processes.
+	if !m.apple() || p.Kube.ContainerID != "" {
+		lines = append(lines, "", th.Title.Render("Correlation"),
+			kv("Container", t(p.Kube.ContainerID)),
+			kv("Runtime", t(p.Kube.Runtime)),
+			kv("Pod", t(p.Kube.PodName)),
+			kv("Pod UID", t(p.Kube.PodUID)),
+			kv("Namespace", t(p.Kube.Namespace)),
+			kv("Container name", t(p.Kube.Container)),
+		)
+		wl := ""
+		if p.Kube.WorkloadName != "" {
+			wl = p.Kube.WorkloadKind + "/" + p.Kube.WorkloadName
+			if p.Kube.Inferred {
+				wl += th.Dim.Render("  (inferred from pod name)")
+			}
 		}
+		lines = append(lines, kv("Workload", t(wl)))
 	}
-	lines = append(lines, kv("Workload", t(wl)))
 	if p.Command != "" {
 		lines = append(lines, "", th.Title.Render("Command"))
 		for _, l := range wrap(p.Command, w-4) {

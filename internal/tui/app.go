@@ -33,6 +33,8 @@ type Options struct {
 	Refresh    time.Duration
 	Remote     string
 	Nodes      NodeLister
+	// Mouse enables click, double-click and wheel handling.
+	Mouse bool
 	// Notices are shown briefly at startup (e.g. config warnings).
 	Notices []string
 }
@@ -47,6 +49,9 @@ type Model struct {
 	refresh    time.Duration
 	remote     string
 	nodes      NodeLister
+	mouse      bool
+	zones      zoneSet
+	click      lastClick
 
 	sub       <-chan *model.Snapshot
 	unsub     func()
@@ -108,7 +113,7 @@ type tickMsg time.Time
 func New(o Options) *Model {
 	m := &Model{
 		src: o.Source, th: o.Theme, keys: o.Keys, fahrenheit: o.Fahrenheit, showCmd: o.ShowCmd,
-		refresh: o.Refresh, remote: o.Remote, nodes: o.Nodes, live: newLive(),
+		refresh: o.Refresh, remote: o.Remote, nodes: o.Nodes, mouse: o.Mouse, live: newLive(),
 		queries: map[string]*query{}, now: time.Now, activeID: o.DefaultTab,
 	}
 	if m.keys == nil {
@@ -127,7 +132,11 @@ func New(o Options) *Model {
 // Run starts the UI and blocks until the user quits or ctx is cancelled.
 func Run(ctx context.Context, o Options) error {
 	m := New(o)
-	p := tea.NewProgram(m, tea.WithAltScreen(), tea.WithContext(ctx))
+	opts := []tea.ProgramOption{tea.WithAltScreen(), tea.WithContext(ctx)}
+	if o.Mouse {
+		opts = append(opts, tea.WithMouseCellMotion())
+	}
+	p := tea.NewProgram(m, opts...)
 	_, err := p.Run()
 	if m.unsub != nil {
 		m.unsub()
@@ -233,6 +242,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.snap = msg.s
 			m.live.observe(msg.s)
 			m.ensureSelection()
+			if !m.procs.sortChosen && len(msg.s.GPUs) > 0 {
+				// Apple GPUs report GPU time but no per-process memory.
+				m.procs.sortChosen = true
+				if m.apple() {
+					m.procs.sortKey = sortUtil
+				}
+			}
 		}
 		cmds := []tea.Cmd{waitSnapshot(m.sub)}
 		if m.activeID == "history" {
@@ -252,6 +268,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tick()
 	case tea.KeyMsg:
 		return m.handleKey(msg)
+	case tea.MouseMsg:
+		return m.handleMouse(msg)
 	}
 	return m, nil
 }
@@ -267,19 +285,24 @@ func (m *Model) ensureSelection() {
 }
 
 func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	key := msg.String()
 	if m.input != nil {
 		return m.handleInput(msg)
 	}
-	a := m.keys.Lookup(key)
+	key := msg.String()
+	return m, m.dispatch(m.keys.Lookup(key), key)
+}
+
+// dispatch performs an action from a key press or a mouse gesture. key is
+// the pressed key, or "" for mouse input.
+func (m *Model) dispatch(a keymap.Action, key string) tea.Cmd {
 	if m.help {
 		if a == keymap.Quit && key == "ctrl+c" {
-			return m, tea.Quit
+			return tea.Quit
 		}
 		if a == keymap.Help || a == keymap.Back || a == keymap.Quit {
 			m.help = false
 		}
-		return m, nil
+		return nil
 	}
 
 	t := m.activeTab()
@@ -287,7 +310,7 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	if a == keymap.Back || a == keymap.Select {
 		if t.keys != nil {
 			if handled, cmd := t.keys(m, a); handled {
-				return m, cmd
+				return cmd
 			}
 		}
 		if a == keymap.Back {
@@ -297,30 +320,30 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 				m.setToast("filters cleared", 2*time.Second)
 			}
 		}
-		return m, nil
+		return nil
 	}
 
 	switch a {
 	case keymap.Quit:
-		return m, tea.Quit
+		return tea.Quit
 	case keymap.Help:
 		m.help = true
-		return m, nil
+		return nil
 	case keymap.NextTab:
 		m.switchTab(1)
-		return m, m.enterCmd()
+		return m.enterCmd()
 	case keymap.PrevTab:
 		m.switchTab(-1)
-		return m, m.enterCmd()
+		return m.enterCmd()
 	case keymap.History:
 		m.activeID = "history"
 		m.onEnterTab()
-		return m, m.enterCmd()
+		return m.enterCmd()
 	case keymap.Refresh:
 		m.src.RefreshNow()
 		m.hist.stale = true
 		m.setToast("refreshing…", 1500*time.Millisecond)
-		return m, m.enterCmd()
+		return m.enterCmd()
 	case keymap.Pause:
 		m.paused = !m.paused
 		if m.paused {
@@ -330,7 +353,7 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			m.frozen = nil
 			m.setToast("resumed", 1500*time.Millisecond)
 		}
-		return m, nil
+		return nil
 	case keymap.Search, keymap.Filter:
 		if t.searchable {
 			mode := "search"
@@ -342,22 +365,22 @@ func (m *Model) handleKey(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		} else {
 			m.setToast("this tab has no search/filter", 2*time.Second)
 		}
-		return m, nil
+		return nil
 	}
 	if idx, ok := keymap.TabIndex(a); ok {
 		vis := m.visibleTabs()
 		if idx < len(vis) {
 			m.activeID = vis[idx].id
 			m.onEnterTab()
-			return m, m.enterCmd()
+			return m.enterCmd()
 		}
-		return m, nil
+		return nil
 	}
 	if t.keys != nil {
 		_, cmd := t.keys(m, a)
-		return m, cmd
+		return cmd
 	}
-	return m, nil
+	return nil
 }
 
 func (m *Model) enterCmd() tea.Cmd {
@@ -424,6 +447,7 @@ func (m *Model) View() string {
 		return strings.Join(lines, "\n")
 	}
 
+	m.zones.reset()
 	body := h - 3
 	var content widgets.Block
 	s := m.view()
@@ -442,5 +466,5 @@ func (m *Model) View() string {
 	out = append(out, m.viewHeader(w), m.viewTabBar(w))
 	out = append(out, content...)
 	out = append(out, m.viewFooter(w))
-	return strings.Join(out, "\n")
+	return m.zones.scan(strings.Join(out, "\n"))
 }

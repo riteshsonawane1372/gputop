@@ -12,6 +12,7 @@ type Source string
 const (
 	SourceNVML        Source = "nvml"        // NVIDIA Management Library
 	SourceDCGM        Source = "dcgm"        // NVIDIA Data Center GPU Manager (planned)
+	SourceIOKit       Source = "iokit"       // Apple IOKit / IOReport / SMC (Apple silicon)
 	SourceHost        Source = "host"        // operating system counters
 	SourceProcfs      Source = "procfs"      // per-process information from the OS
 	SourceKubernetes  Source = "kubernetes"  // Kubernetes API / kubelet artifacts

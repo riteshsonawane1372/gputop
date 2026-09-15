@@ -54,6 +54,11 @@ type Table struct {
 	SortDesc bool
 	// Widths is filled by Render with the resolved column widths (0 = hidden).
 	Widths []int
+	// RowMark, when set, decorates each rendered row line (row is the index
+	// into Rows); HeaderMark decorates each rendered column title. Both must
+	// return strings of the same display width (used for mouse zones).
+	RowMark    func(row int, line string) string
+	HeaderMark func(col int, title string) string
 }
 
 // Layout resolves column widths for the available width.
@@ -157,7 +162,11 @@ func (t *Table) Render(th *theme.Theme, w, h int) Block {
 			title += arrow
 			st = th.Primary.Bold(true)
 		}
-		hdr.WriteString(align(th, st.Render(title), widths[i], c.Align))
+		cell := align(th, st.Render(title), widths[i], c.Align)
+		if t.HeaderMark != nil {
+			cell = t.HeaderMark(i, cell)
+		}
+		hdr.WriteString(cell)
 	}
 	out = append(out, Fit(th, hdr.String(), w))
 
@@ -210,7 +219,11 @@ func (t *Table) Render(th *theme.Theme, w, h int) Block {
 				line += th.Selected.Render(strings.Repeat(" ", pad))
 			}
 		}
-		out = append(out, Fit(th, line, w))
+		line = Fit(th, line, w)
+		if t.RowMark != nil {
+			line = t.RowMark(r, line)
+		}
+		out = append(out, line)
 	}
 	for len(out) < h {
 		out = append(out, Space(th, w))

@@ -1,0 +1,64 @@
+name: Prerelease
+
+# Every push to main publishes a semantic prerelease (for example
+# v0.0.2-main.7: the next patch after the latest stable tag, numbered by
+# commits since it) with binaries for every platform. Prereleases are never
+# marked as the latest release.
+#
+# Tags pushed with GITHUB_TOKEN do not trigger other workflows, so this does
+# not also start release.yml.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerelease
+  cancel-in-progress: false
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test -count=1 ./...
+      - name: Compute version
+        id: version
+        run: |
+          set -euo pipefail
+          tag=$(scripts/version.sh prerelease)
+          if [ -z "$tag" ]; then
+            echo "HEAD is a stable release tag; nothing to prerelease."
+          else
+            echo "tag=$tag" >> "$GITHUB_OUTPUT"
+            echo "previous=$(scripts/version.sh previous "$tag")" >> "$GITHUB_OUTPUT"
+            echo "Prerelease $tag"
+          fi
+      - name: Tag
+        if: steps.version.outputs.tag != ''
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+      - uses: goreleaser/goreleaser-action@v6
+        if: steps.version.outputs.tag != ''
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: ${{ steps.version.outputs.tag }}
+          GORELEASER_PREVIOUS_TAG: ${{ steps.version.outputs.previous }}

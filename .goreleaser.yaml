@@ -12,7 +12,7 @@ builds:
     main: ./cmd/gputop
     binary: gputop
     env:
-      - CGO_ENABLED=0 # NVML is loaded at runtime via dlopen; no cgo needed.
+      - CGO_ENABLED=0 # NVML and Apple IOKit are loaded at runtime via purego; no cgo needed.
     goos: [linux, darwin]
     goarch: [amd64, arm64]
     flags: [-trimpath]
@@ -24,15 +24,12 @@ builds:
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:
-  - id: default
-    formats: [tar.gz]
-    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    files:
-      - LICENSE
-      - README.md
-      - CHANGELOG.md
-      - examples/**/*
-      - deploy/**/*
+  # Releases ship plain executables only (no archives): download and run.
+  # Stable names make .../releases/latest/download/gputop-linux-amd64 work.
+  - id: binary
+    ids: [gputop]
+    formats: [binary]
+    name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}"
 
 checksum:
   name_template: checksums.txt
@@ -44,6 +41,15 @@ snapshot:
 changelog:
   use: github
   sort: asc
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 1
+    - title: Other changes
+      order: 999
   filters:
     exclude:
       - "^docs:"
@@ -51,6 +57,34 @@ changelog:
       - "^ci:"
 
 release:
+  # Tags with a suffix (v0.0.2-main.7, v0.1.0-rc.1) become prereleases and
+  # never take the "Latest" badge from a stable release.
   prerelease: auto
+  make_latest: "{{ if .Prerelease }}false{{ else }}true{{ end }}"
+  name_template: "gputop {{ .Tag }}"
+  header: |
+    {{ if .Prerelease }}> [!NOTE]
+    > Prerelease built from `main` at {{ .ShortCommit }}. For production use the latest stable release.
+    {{ end }}
+    ## Install
+
+    Pick the binary for your platform (Linux: NVIDIA GPUs via NVML; macOS: Apple silicon GPUs):
+
+    | Platform | Binary |
+    |---|---|
+    | Linux x86_64 | `gputop-linux-amd64` |
+    | Linux arm64 | `gputop-linux-arm64` |
+    | macOS Apple silicon | `gputop-darwin-arm64` |
+    | macOS Intel | `gputop-darwin-amd64` |
+
+    ```sh
+    # example: Linux x86_64
+    curl -fLo gputop https://github.com/{{ .Env.GITHUB_REPOSITORY }}/releases/download/{{ .Tag }}/gputop-linux-amd64
+    chmod +x gputop && sudo install gputop /usr/local/bin/
+    ```
+
+    The "Source code" archives below are added by GitHub to every release and cannot be removed; you do not need them.
+
+    On macOS, clear the download quarantine flag before the first run: `xattr -d com.apple.quarantine gputop`.
   footer: |
     Verify downloads with `sha256sum -c checksums.txt`.

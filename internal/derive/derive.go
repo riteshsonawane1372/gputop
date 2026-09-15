@@ -138,6 +138,10 @@ func (tr *Tracker) Apply(s *model.Snapshot, xids map[gpu.ID][]health.XID) {
 	s.Fleet = Fleet(s)
 }
 
+// sharedDesktopGPU reports whether the GPU is shared with the desktop
+// compositor (Apple silicon), where GPU allocation is not a scheduling concept.
+func sharedDesktopGPU(g *model.GPU) bool { return g.Device.Vendor == gpu.VendorApple }
+
 func (tr *Tracker) applyGPU(g *model.GPU, t *track, now time.Time, xids []health.XID) {
 	d := &g.Derived
 	smp := g.Sample
@@ -185,7 +189,9 @@ func (tr *Tracker) applyGPU(g *model.GPU, t *track, now time.Time, xids []health
 	if d.State == model.StateIdle || d.State == model.StateActive && smp.UtilPercent.V < tr.opts.IdleThreshold {
 		d.IdleFor = now.Sub(t.lastActive)
 	}
-	d.IdleAllocated = d.Allocated && d.State == model.StateIdle && d.IdleFor >= tr.opts.IdleAfter
+	// An integrated desktop GPU always has clients (the window server), so
+	// "allocated but idle" is not a signal there.
+	d.IdleAllocated = d.Allocated && d.State == model.StateIdle && d.IdleFor >= tr.opts.IdleAfter && !sharedDesktopGPU(g)
 
 	tr.efficiency(g, t, now)
 	tr.linkRates(g, t, now)
@@ -497,7 +503,7 @@ func Fleet(s *model.Snapshot) model.Fleet {
 		}
 		if d.Allocated {
 			f.Allocated++
-			if d.UtilAvg.OK && g.Available {
+			if d.UtilAvg.OK && g.Available && !sharedDesktopGPU(&g) {
 				unused += 1 - d.UtilAvg.V/100
 				unusedOK = true
 			}

@@ -63,7 +63,7 @@ Usage:
   gputop [flags]
 
 Modes:
-  gputop                      interactive TUI (default)
+  gputop                      interactive TUI (default; GPU vendor auto-detected)
   gputop --once               print a one-shot summary and exit
   gputop --once --json        print one JSON snapshot and exit
   gputop --json               stream JSON snapshots (one per line)
@@ -304,7 +304,7 @@ func runTUI(ctx context.Context, cfg config.Config, f *flags, log *slog.Logger, 
 	err = tui.Run(ctx, tui.Options{
 		Source: rt.Engine, Theme: th, Keys: keys, DefaultTab: cfg.UI.DefaultTab,
 		Fahrenheit: strings.EqualFold(cfg.UI.TemperatureUnit, "f"), ShowCmd: cfg.UI.ShowCommandLines,
-		Refresh: cfg.Refresh.Interval.D(), Nodes: nodes, Notices: notices,
+		Refresh: cfg.Refresh.Interval.D(), Nodes: nodes, Mouse: cfg.UI.Mouse, Notices: notices,
 	})
 	cancel()
 	select {
@@ -366,7 +366,7 @@ func runRemote(ctx context.Context, cfg config.Config, f *flags, stdout, stderr 
 	err = tui.Run(ctx, tui.Options{
 		Source: client, Theme: th, Keys: keys, DefaultTab: cfg.UI.DefaultTab,
 		Fahrenheit: strings.EqualFold(cfg.UI.TemperatureUnit, "f"), Refresh: cfg.Refresh.Interval.D(),
-		Remote: node.Name, Notices: append(notices, keyNotices...),
+		Remote: node.Name, Mouse: cfg.UI.Mouse, Notices: append(notices, keyNotices...),
 	})
 	if err != nil {
 		fmt.Fprintf(stderr, "gputop: %v\n", err)

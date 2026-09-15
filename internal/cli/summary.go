@@ -9,6 +9,7 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"github.com/gputop/gputop/internal/gpu"
 	"github.com/gputop/gputop/internal/metric"
 	"github.com/gputop/gputop/internal/model"
 )
@@ -64,12 +65,18 @@ func writeSummary(w io.Writer, s *model.Snapshot, color bool) error {
 		}
 		return fmt.Sprintf(format, o.V)
 	}
-	fmt.Fprintf(w, "GPUs %d  busy %d  active %d  idle %d  down %d  allocated %d  power %s  vram %s  health %s\n\n",
+	// Apple silicon GPUs use unified memory, not dedicated VRAM, and draw
+	// single-digit watts.
+	memLabel, powerFmt := "VRAM", "%.0f W"
+	if len(s.GPUs) > 0 && s.GPUs[0].Device.Vendor == gpu.VendorApple {
+		memLabel, powerFmt = "MEM", "%.1f W"
+	}
+	fmt.Fprintf(w, "GPUs %d  busy %d  active %d  idle %d  down %d  allocated %d  power %s  %s %s  health %s\n\n",
 		f.GPUs, f.Busy, f.Active-f.Busy, f.Idle, f.Unavailable, f.Allocated,
-		na(f.PowerW, "%.0f W"), na(metric.Map(f.VRAMFraction, func(v float64) float64 { return v * 100 }), "%.0f%%"), na(f.HealthAvg, "%.0f"))
+		na(f.PowerW, powerFmt), strings.ToLower(memLabel), na(metric.Map(f.VRAMFraction, func(v float64) float64 { return v * 100 }), "%.0f%%"), na(f.HealthAvg, "%.0f"))
 
 	tw := tabwriter.NewWriter(w, 0, 4, 2, ' ', 0)
-	fmt.Fprintln(tw, "GPU\tNAME\tUTIL\tVRAM\tTEMP\tPOWER\tHEALTH\tSTATE\tPROCS")
+	fmt.Fprintln(tw, "GPU\tNAME\tUTIL\t"+memLabel+"\tTEMP\tPOWER\tHEALTH\tSTATE\tPROCS")
 	for _, g := range s.GPUs {
 		smp := g.Sample
 		vram := "N/A"
@@ -87,7 +94,7 @@ func writeSummary(w io.Writer, s *model.Snapshot, color bool) error {
 			state = c("31", "unavailable: "+g.Error)
 		}
 		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%d\t%s\t%d\n", g.Device.Index, strings.TrimSuffix(g.Device.Name, " (simulated)"),
-			na(smp.UtilPercent, "%.0f%%"), vram, na(smp.TempC, "%.0f°C"), na(smp.PowerW, "%.0f W"), g.Health.Score, state, g.Processes)
+			na(smp.UtilPercent, "%.0f%%"), vram, na(smp.TempC, "%.0f°C"), na(smp.PowerW, powerFmt), g.Health.Score, state, g.Processes)
 	}
 	if err := tw.Flush(); err != nil {
 		return err

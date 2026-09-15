@@ -123,6 +123,9 @@ func fmtWatts(w float64) string {
 	if w >= 10000 {
 		return fmt.Sprintf("%.2f kW", w/1000)
 	}
+	if w < 10 {
+		return fmt.Sprintf("%.1f W", w)
+	}
 	return fmt.Sprintf("%.0f W", w)
 }
 
@@ -161,7 +164,7 @@ func fmtAgo(now, t time.Time) string {
 // shortName trims vendor prefixes from device names for dense tables.
 func shortName(name string) string {
 	name = strings.TrimSuffix(name, " (simulated)")
-	for _, p := range []string{"NVIDIA ", "GeForce "} {
+	for _, p := range []string{"NVIDIA ", "GeForce ", "Apple "} {
 		name = strings.TrimPrefix(name, p)
 	}
 	return name

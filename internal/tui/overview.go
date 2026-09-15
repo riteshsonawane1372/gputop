@@ -94,14 +94,17 @@ func (m *Model) fleetLines(s *model.Snapshot, w int) []string {
 	}
 	lines = append(lines, m.kv("GPUs", th.Bold.Render(fmt.Sprint(f.GPUs))+"   "+states, lw))
 
-	alloc := th.Text.Render(fmt.Sprintf("%d/%d", f.Allocated, f.GPUs))
-	if f.IdleAllocated > 0 {
-		alloc += th.Warn.Render(fmt.Sprintf("  %d allocated but idle", f.IdleAllocated))
+	// Allocation is a scheduling concept; a Mac's GPU always serves the desktop.
+	if !m.apple() {
+		alloc := th.Text.Render(fmt.Sprintf("%d/%d", f.Allocated, f.GPUs))
+		if f.IdleAllocated > 0 {
+			alloc += th.Warn.Render(fmt.Sprintf("  %d allocated but idle", f.IdleAllocated))
+		}
+		if f.Throttled > 0 {
+			alloc += th.Warn.Render(fmt.Sprintf("  %d throttled", f.Throttled))
+		}
+		lines = append(lines, m.kv("Allocated", alloc, lw))
 	}
-	if f.Throttled > 0 {
-		alloc += th.Warn.Render(fmt.Sprintf("  %d throttled", f.Throttled))
-	}
-	lines = append(lines, m.kv("Allocated", alloc, lw))
 
 	if f.HealthAvg.OK {
 		hs := m.healthStyle(int(f.HealthAvg.V))
@@ -137,7 +140,11 @@ func (m *Model) fleetLines(s *model.Snapshot, w int) []string {
 		if f.VRAMFraction.OK {
 			txt = widgets.Bar(th, f.VRAMFraction.V, barW) + th.Base.Render(" ") + txt + th.Text.Render(fmt.Sprintf(" %.0f%%", f.VRAMFraction.V*100))
 		}
-		lines = append(lines, m.kv("VRAM", txt, lw))
+		label := "VRAM"
+		if m.apple() {
+			label = "GPU mem"
+		}
+		lines = append(lines, m.kv(label, txt, lw))
 	}
 	if f.TempAvgC.OK {
 		lines = append(lines, m.kv("Temp", th.Text.Render(m.temp(f.TempAvgC))+th.Dim.Render(" avg · max ")+
@@ -210,7 +217,7 @@ func (m *Model) gpuTable(s *model.Snapshot, w, h int) widgets.Block {
 			{Title: "#", Width: 2, Align: widgets.Right},
 			{Title: "NAME", Width: 18, Min: 8, Flex: true, Priority: 4},
 			{Title: "UTIL", Width: 18, Min: 10},
-			{Title: "VRAM", Width: 22, Min: 12},
+			{Title: m.memTitle(), Width: 22, Min: 12},
 			{Title: "TEMP", Width: 5, Align: widgets.Right},
 			{Title: "POWER", Width: 10, Align: widgets.Right, Priority: 1},
 			{Title: "HEALTH", Width: 6, Align: widgets.Right, Priority: 2},
@@ -225,6 +232,7 @@ func (m *Model) gpuTable(s *model.Snapshot, w, h int) widgets.Block {
 	workloads := gpuWorkloads(s)
 	_, sel := m.selected()
 	tb.Selected = sel
+	tb.RowMark = m.gpuRowMark()
 	for i := range s.GPUs {
 		g := &s.GPUs[i]
 		smp := g.Sample
@@ -249,7 +257,7 @@ func (m *Model) gpuTable(s *model.Snapshot, w, h int) widgets.Block {
 		row[4] = widgets.R(m.naOr(m.temp(smp.TempC), th.Level(smp.TempC.V, 80, 88)))
 		pw := na
 		if smp.PowerW.OK {
-			pw = fmt.Sprintf("%.0fW", smp.PowerW.V)
+			pw = strings.ReplaceAll(fmtWatts(smp.PowerW.V), " ", "")
 			if smp.PowerLimitW.OK {
 				pw = fmt.Sprintf("%.0f/%.0fW", smp.PowerW.V, smp.PowerLimitW.V)
 			}
@@ -298,6 +306,9 @@ func gpuWorkloads(s *model.Snapshot) map[gpu.ID]string {
 }
 
 func (m *Model) topProcesses(s *model.Snapshot, w, h int) widgets.Block {
+	if m.apple() {
+		return m.topProcessesApple(s, w, h)
+	}
 	th := m.th
 	procs := append([]model.Process(nil), s.Processes...)
 	sort.SliceStable(procs, func(i, j int) bool { return procs[i].MemUsed.Or(0) > procs[j].MemUsed.Or(0) })
@@ -332,6 +343,34 @@ func (m *Model) topProcesses(s *model.Snapshot, w, h int) widgets.Block {
 		})
 	}
 	return widgets.Box(th, widgets.BoxOpts{Title: "Top processes", RightTitle: "by VRAM"}, w, h, tb.Render(th, w-2, h-2))
+}
+
+// topProcessesApple ranks processes by GPU time: Apple reports no
+// per-process GPU memory.
+func (m *Model) topProcessesApple(s *model.Snapshot, w, h int) widgets.Block {
+	th := m.th
+	procs := append([]model.Process(nil), s.Processes...)
+	sort.SliceStable(procs, func(i, j int) bool { return procs[i].SMUtil.Or(-1) > procs[j].SMUtil.Or(-1) })
+	tb := &widgets.Table{
+		Columns: []widgets.Column{
+			{Title: "PID", Width: 7, Align: widgets.Right},
+			{Title: "PROCESS", Width: 20, Min: 8, Flex: true},
+			{Title: "GPU%", Width: 5, Align: widgets.Right},
+			{Title: "USER", Width: 12, Min: 6, Priority: 1},
+		},
+		Selected: -1, SortCol: 2, SortDesc: true,
+	}
+	for _, p := range procs {
+		name := p.Name
+		if name == "" {
+			name = "?"
+		}
+		tb.Rows = append(tb.Rows, []widgets.Cell{
+			widgets.C(th.Dim, fmt.Sprint(p.PID)), widgets.C(th.Text, name),
+			widgets.R(m.naOr(optF(p.SMUtil, "%.0f"), th.Gradient(p.SMUtil.V/100))), widgets.C(th.Dim, p.User),
+		})
+	}
+	return widgets.Box(th, widgets.BoxOpts{Title: "Top processes", RightTitle: "by GPU time"}, w, h, tb.Render(th, w-2, h-2))
 }
 
 func (m *Model) alertsAndEvents(s *model.Snapshot, w, h int) widgets.Block {

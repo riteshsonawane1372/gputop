@@ -6,6 +6,7 @@ package widgets
 import (
 	"strings"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/gputop/gputop/internal/theme"
 )
 
@@ -81,4 +82,26 @@ func Rule(th *theme.Theme, label string, w int) string {
 		return Fit(th, th.Dim.Render(label), w)
 	}
 	return th.Border.Render("──") + th.Dim.Render(l) + th.Border.Render(strings.Repeat("─", rest))
+}
+
+// Scrollbar draws a scroll thumb over the last column of b (typically the
+// right border of a box) when the content is scrolled by offset of at most
+// maxOffset lines. b is returned unchanged when nothing is hidden.
+func Scrollbar(th *theme.Theme, b Block, offset, maxOffset int) Block {
+	h := len(b)
+	if maxOffset <= 0 || h < 3 {
+		return b
+	}
+	thumb := max(1, h*h/(h+maxOffset))
+	pos := (h - thumb) * min(max(offset, 0), maxOffset) / maxOffset
+	out := make(Block, h)
+	for i, l := range b {
+		if i < pos || i >= pos+thumb {
+			out[i] = l
+			continue
+		}
+		w := Width(l)
+		out[i] = ansi.Truncate(l, w-1, "") + th.BorderFocus.Render("┃")
+	}
+	return out
 }

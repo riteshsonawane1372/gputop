@@ -73,8 +73,8 @@ type Theme struct {
 
 // GPU configures accelerator providers and derived metrics.
 type GPU struct {
-	// Providers to enable. "auto" enables every provider built for the
-	// platform.
+	// Providers to enable: "nvidia", "apple", or "auto" (Apple silicon on
+	// macOS, NVIDIA elsewhere).
 	Providers StringList `yaml:"providers"`
 	// IdleThreshold is the utilization (percent) below which a GPU counts
 	// as idle.
@@ -160,6 +160,10 @@ type UI struct {
 	TemperatureUnit string `yaml:"temperature_unit"`
 	// ShowCommandLines displays full command lines in the process view.
 	ShowCommandLines bool `yaml:"show_command_lines"`
+	// Mouse enables clicking tabs, rows and column headers, and wheel
+	// scrolling. Most terminals still select text with Shift (Option in
+	// macOS Terminal/iTerm2) held down.
+	Mouse bool `yaml:"mouse"`
 }
 
 // DefaultPort is the default service port.
@@ -185,7 +189,7 @@ func Default() Config {
 		Server:     Server{Listen: fmt.Sprintf("127.0.0.1:%d", DefaultPort), ExposeProcesses: true},
 		Prometheus: Prometheus{Enabled: true, Path: "/metrics"},
 		Logging:    Logging{Level: "warn"},
-		UI:         UI{DefaultTab: "overview", TemperatureUnit: "c"},
+		UI:         UI{DefaultTab: "overview", TemperatureUnit: "c", Mouse: true},
 	}
 }
 
@@ -278,9 +282,9 @@ func (c *Config) Validate() error {
 	}
 	for _, p := range c.GPU.Providers {
 		switch p {
-		case "auto", "nvidia":
+		case "auto", "nvidia", "apple":
 		default:
-			bad("gpu.providers: unknown provider %q (available: auto, nvidia)", p)
+			bad("gpu.providers: unknown provider %q (available: auto, nvidia, apple)", p)
 		}
 	}
 

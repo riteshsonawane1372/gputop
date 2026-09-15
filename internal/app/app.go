@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log/slog"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/gputop/gputop/internal/collector"
@@ -16,6 +17,7 @@ import (
 	"github.com/gputop/gputop/internal/derive"
 	"github.com/gputop/gputop/internal/events"
 	"github.com/gputop/gputop/internal/gpu"
+	"github.com/gputop/gputop/internal/gpu/apple"
 	"github.com/gputop/gputop/internal/gpu/nvidia"
 	"github.com/gputop/gputop/internal/gpu/sim"
 	"github.com/gputop/gputop/internal/history"
@@ -42,23 +44,38 @@ type Runtime struct {
 	Close   func()
 }
 
-// Providers builds the configured accelerator providers.
+// Providers builds the configured accelerator providers. "auto" detects the
+// platform's vendor: Apple silicon on macOS, NVIDIA everywhere else.
 func Providers(cfg config.Config, demo bool, demoGPUs int) []gpu.Provider {
 	if demo {
 		return []gpu.Provider{sim.New(sim.Options{GPUs: demoGPUs})}
 	}
 	var out []gpu.Provider
+	added := map[string]bool{}
 	for _, name := range cfg.GPU.Providers {
+		if name == "auto" {
+			name = autoProvider(runtime.GOOS)
+		}
+		if added[name] {
+			continue
+		}
+		added[name] = true
 		switch name {
-		case "auto", "nvidia":
+		case "nvidia":
 			out = append(out, nvidia.New(nvidia.Options{LibraryPaths: cfg.GPU.NVIDIA.LibraryPaths}))
+		case "apple":
+			out = append(out, apple.New(apple.Options{}))
 		}
 	}
-	// Deduplicate "auto" + "nvidia".
-	if len(out) > 1 {
-		out = out[:1]
-	}
 	return out
+}
+
+// autoProvider is the provider "auto" selects on goos.
+func autoProvider(goos string) string {
+	if goos == "darwin" {
+		return "apple"
+	}
+	return "nvidia"
 }
 
 // Build creates the engine and its dependencies.

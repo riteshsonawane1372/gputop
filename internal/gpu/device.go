@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // Package gpu defines the vendor-neutral accelerator domain model and the
-// Provider interface implemented by vendor backends (gpu/nvidia, and in the
-// future gpu/amd, gpu/intel, ...).
+// Provider interface implemented by vendor backends (gpu/nvidia, gpu/apple, and
+// in the future gpu/amd, gpu/intel, ...).
 //
 // Nothing in this package may assume a particular vendor. Vendor-specific
 // concepts are mapped onto these types by the provider.
@@ -18,6 +18,7 @@ type Vendor string
 
 const (
 	VendorNVIDIA    Vendor = "nvidia"
+	VendorApple     Vendor = "apple"
 	VendorSimulated Vendor = "simulated"
 )
 

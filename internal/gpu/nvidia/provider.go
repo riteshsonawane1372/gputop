@@ -121,6 +121,9 @@ func (p *Provider) Open(ctx context.Context) (gpu.Diagnostics, error) {
 
 	if runtime.GOOS != "linux" {
 		add("Platform", false, fmt.Sprintf("%s/%s — NVIDIA NVML is only available on Linux", runtime.GOOS, runtime.GOARCH))
+		if runtime.GOOS == "darwin" {
+			diag.Hints = append(diag.Hints, "On a Mac, gputop monitors the Apple silicon GPU: set gpu.providers to [auto] or [apple].")
+		}
 		diag.Hints = append(diag.Hints,
 			"NVIDIA GPUs are monitored on Linux hosts. Run gputop on the GPU node, or connect to one with --remote.",
 			"Try `gputop --demo` to explore the interface with simulated GPUs.")

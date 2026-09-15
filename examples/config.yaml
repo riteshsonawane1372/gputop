@@ -67,3 +67,4 @@ ui:
   default_tab: overview
   temperature_unit: c
   show_command_lines: false
+  mouse: true

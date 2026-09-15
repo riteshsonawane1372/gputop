@@ -77,6 +77,26 @@ and registering it in `internal/app`. No other package changes.
   (`nvmlEventSetWait_v2`), not polling. Xid descriptions and severity come from
   NVIDIA's published Xid catalog (`xid_catalog.go`, generated).
 
+## Apple silicon provider (`internal/gpu/apple`)
+
+- Selected by `gpu.providers: [auto]` on macOS (NVIDIA elsewhere), or
+  explicitly with `apple`.
+- Bindings to CoreFoundation, IOKit and `libIOReport.dylib` are loaded with
+  purego (`cf_darwin.go`), keeping the macOS build cgo-free. Nothing needs root.
+- Sources: the `IOAccelerator` entry's `PerformanceStatistics` (device
+  utilization, GPU memory in use and allocated); an IOReport subscription to
+  the "Energy Model" and "GPU Stats / GPU Performance States" channels (GPU
+  energy per sample interval → power; P-state residency weighted by the `pmgr`
+  DVFS table → average active frequency); the SMC `Tg??` float keys averaged
+  (GPU die temperature, with the HID "GPU MTR Temp Sensor" services as a
+  fallback on older SoCs); and the `AGXDeviceUserClient` children's
+  `AppUsage.accumulatedGPUTime` summed per PID (per-process GPU time share).
+- Hardware access sits behind a small `backend` interface; provider tests use a
+  fake, and `iokit_darwin_test.go` reads the real GPU when one is present.
+- Energy is accumulated from provider start. ECC, PCIe, NVLink, MIG, power
+  limits and throttle reasons are reported as unsupported; the TUI hides or
+  replaces the views that depend on them.
+
 ## Collector engine (`internal/collector`)
 
 | Tier | Default | Collectors |

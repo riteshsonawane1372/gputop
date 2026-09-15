@@ -68,8 +68,8 @@ type Binding struct {
 var defaults = []Binding{
 	{Quit, []string{"q", "ctrl+c"}, "quit"},
 	{Help, []string{"?"}, "toggle help"},
-	{NextTab, []string{"tab"}, "next tab"},
-	{PrevTab, []string{"shift+tab"}, "previous tab"},
+	{NextTab, []string{"tab", "right"}, "next tab"},
+	{PrevTab, []string{"shift+tab", "left"}, "previous tab"},
 	{Tab1, []string{"1"}, "tab 1"}, {Tab2, []string{"2"}, "tab 2"}, {Tab3, []string{"3"}, "tab 3"},
 	{Tab4, []string{"4"}, "tab 4"}, {Tab5, []string{"5"}, "tab 5"}, {Tab6, []string{"6"}, "tab 6"},
 	{Tab7, []string{"7"}, "tab 7"}, {Tab8, []string{"8"}, "tab 8"}, {Tab9, []string{"9"}, "tab 9"},
@@ -81,8 +81,10 @@ var defaults = []Binding{
 	{Back, []string{"esc"}, "back / clear"},
 	{Up, []string{"up", "k"}, "move up"},
 	{Down, []string{"down", "j"}, "move down"},
-	{Left, []string{"left"}, "move left"},
-	{Right, []string{"right", "l"}, "move right"},
+	// The arrow keys switch tabs; left/right stay bindable for users who
+	// prefer them inside tables.
+	{Left, nil, "move left"},
+	{Right, []string{"l"}, "move right"},
 	{PageUp, []string{"pgup", "ctrl+u"}, "page up"},
 	{PageDown, []string{"pgdown", "ctrl+d"}, "page down"},
 	{Home, []string{"home", "g"}, "first row"},
