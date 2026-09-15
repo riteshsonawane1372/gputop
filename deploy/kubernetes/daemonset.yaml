@@ -1,0 +1,82 @@
+# gputop agent as a DaemonSet on GPU nodes.
+#
+# - hostPID lets gputop resolve the host PIDs reported by NVML.
+# - The API listens on loopback inside the pod; use `kubectl port-forward`
+#   or enable TLS + token auth (see docs/remote.md) before exposing it.
+# - RBAC grants read-only access to pods (and jobs, to resolve CronJobs).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gputop
+  namespace: gputop
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gputop
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list]
+  - apiGroups: [batch]
+    resources: [jobs]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gputop
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gputop
+subjects:
+  - kind: ServiceAccount
+    name: gputop
+    namespace: gputop
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: gputop
+  namespace: gputop
+spec:
+  selector:
+    matchLabels: {app: gputop}
+  template:
+    metadata:
+      labels: {app: gputop}
+    spec:
+      serviceAccountName: gputop
+      hostPID: true
+      nodeSelector:
+        nvidia.com/gpu.present: "true"
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: gputop
+          image: ghcr.io/gputop/gputop:latest # build from the release binary; see docs/kubernetes.md
+          args: ["--service", "--listen", "127.0.0.1:9469"]
+          env:
+            - name: NODE_NAME
+              valueFrom: {fieldRef: {fieldPath: spec.nodeName}}
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: utility
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+          resources:
+            requests: {cpu: 20m, memory: 32Mi}
+            limits: {memory: 128Mi}
+          volumeMounts:
+            - {name: pod-logs, mountPath: /var/log/pods, readOnly: true}
+            - {name: state, mountPath: /state}
+      volumes:
+        - name: pod-logs
+          hostPath: {path: /var/log/pods}
+        - name: state
+          emptyDir: {}

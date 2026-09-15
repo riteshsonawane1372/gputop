@@ -1,0 +1,24 @@
+# Custom theme example. Copy to ~/.config/gputop/themes/ and select it with
+#   theme: { name: solarized-dark }   or   gputop --theme solarized-dark
+name: solarized-dark
+extends: green
+colors:
+  background: "#002b36"
+  surface: "#073642"
+  foreground: "#93a1a1"
+  primary: "#2aa198"
+  secondary: "#839496"
+  muted: "#586e75"
+  accent: "#268bd2"
+  ok: "#859900"
+  warning: "#b58900"
+  critical: "#dc322f"
+  unavailable: "#586e75"
+  border: "#0f4a57"
+  border_focus: "#2aa198"
+  title: "#2aa198"
+  selection: "#0a4b5a"
+  selection_fg: "#fdf6e3"
+  graph_low: "#268bd2"
+  graph_mid: "#2aa198"
+  graph_high: "#dc322f"

@@ -1,0 +1,44 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - misspell
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - nilerr
+    - unconvert
+    - usestdlibvars
+  settings:
+    errcheck:
+      exclude-functions:
+        # bufio write errors are sticky and checked by Flush.
+        - (*bufio.Writer).WriteByte
+        - (*bufio.Writer).WriteString
+        - (*bufio.Writer).WriteRune
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Fprint
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+        - singleCaseSwitch
+        - appendAssign
+        - exitAfterDefer
+  exclusions:
+    presets:
+      - comments
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters: [errcheck, bodyclose]
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

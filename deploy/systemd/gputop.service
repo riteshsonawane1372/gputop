@@ -1,0 +1,22 @@
+# gputop agent (service mode). Install to /etc/systemd/system/gputop.service.
+[Unit]
+Description=gputop GPU telemetry agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/gputop --service --config /etc/gputop/config.yaml
+Restart=on-failure
+RestartSec=5
+DynamicUser=yes
+StateDirectory=gputop
+Environment=XDG_STATE_HOME=/var/lib
+SupplementaryGroups=video
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

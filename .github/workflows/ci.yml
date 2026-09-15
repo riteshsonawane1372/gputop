@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l .)" || (gofmt -l . && exit 1)
+      - name: go vet (host and cross-platform)
+        run: |
+          go vet ./...
+          GOOS=darwin go vet ./...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.5.0
+
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Unit tests (race detector)
+        run: go test -race -count=1 ./...
+      - name: NVIDIA integration tests (skip without hardware)
+        if: runner.os == 'Linux'
+        run: go test -tags integration -run Integration -v ./internal/gpu/nvidia/
+      - name: NVML binding ABI against a fake libnvidia-ml
+        if: runner.os == 'Linux'
+        run: scripts/test-fake-nvml.sh
+
+  cross-compile:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target: [linux/amd64, linux/arm64, darwin/amd64, darwin/arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build ${{ matrix.target }}
+        run: |
+          export GOOS=${TARGET%/*} GOARCH=${TARGET#*/}
+          CGO_ENABLED=0 go build -trimpath -o gputop-$GOOS-$GOARCH ./cmd/gputop
+          file gputop-$GOOS-$GOARCH
+        env:
+          TARGET: ${{ matrix.target }}
+
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build and run one-shot modes
+        run: |
+          go build -o gputop ./cmd/gputop
+          ./gputop --version
+          ./gputop --demo --once
+          ./gputop --demo --once --json | python3 -c 'import json,sys; s=json.load(sys.stdin); assert s["schema"]=="gputop.snapshot/v1" and len(s["gpus"])==8'
+          ./gputop --print-config > /dev/null
+          # No NVIDIA driver on hosted runners: must explain, not crash (exit 3).
+          ./gputop --once || test $? -eq 3
+
+  goreleaser-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: check
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --snapshot --clean --skip=publish

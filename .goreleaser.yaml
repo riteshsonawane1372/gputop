@@ -1,0 +1,56 @@
+# GoReleaser configuration: https://goreleaser.com
+version: 2
+
+project_name: gputop
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: gputop
+    main: ./cmd/gputop
+    binary: gputop
+    env:
+      - CGO_ENABLED=0 # NVML is loaded at runtime via dlopen; no cgo needed.
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w
+      - -X github.com/gputop/gputop/internal/buildinfo.Version=v{{ .Version }}
+      - -X github.com/gputop/gputop/internal/buildinfo.Commit={{ .Commit }}
+      - -X github.com/gputop/gputop/internal/buildinfo.Date={{ .Date }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - LICENSE
+      - README.md
+      - CHANGELOG.md
+      - examples/**/*
+      - deploy/**/*
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+
+release:
+  prerelease: auto
+  footer: |
+    Verify downloads with `sha256sum -c checksums.txt`.

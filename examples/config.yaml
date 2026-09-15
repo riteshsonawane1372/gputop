@@ -1,0 +1,69 @@
+# gputop configuration example. Copy to ~/.config/gputop/config.yaml.
+# Every key is optional; omitted keys use the defaults shown here.
+# Print the effective configuration with: gputop --print-config
+
+refresh:
+  interval: 1s      # fast tier: utilization, memory, power, temperature
+  normal: 3s        # processes, health counters, NVLink
+  slow: 30s         # MIG, filesystems, Kubernetes metadata
+  inventory: 5m     # device discovery and static inventory
+  timeout: 5s       # bound for a single collection pass
+
+history:
+  enabled: true
+  retention: 30m    # e.g. 2h, 24h, 7d (retention/resolution must stay <= 20000 points)
+  resolution: 5s
+  persist: true     # survive restarts (~/.local/state/gputop/history)
+  max_disk_mb: 256
+
+theme:
+  name: green       # green, amber, ice, mono, dusk, or a file in ~/.config/gputop/themes/
+  transparent: false
+  # colors:          # override individual roles of the selected theme
+  #   primary: "#00ff66"
+
+keys:               # action: key or [keys]; see docs/configuration.md for all actions
+  quit: [q, ctrl+c]
+  help: "?"
+  history: h
+  refresh: r
+
+gpu:
+  providers: [auto]
+  idle_threshold: 5     # percent
+  idle_after: 5m        # flag allocated GPUs idle this long
+  outlier_min_delta: 20 # percentage points below the cohort median
+  nvidia:
+    library_paths: []   # extra libnvidia-ml.so.1 locations
+
+kubernetes:
+  enabled: auto
+  pod_logs_dir: /var/log/pods
+  api: auto             # in-cluster service account when running in a pod
+
+remote:
+  nodes: []
+  # - name: gpu-node-01
+  #   address: gpu-node-01.example.com   # https, default port 9469
+  #   token_file: ~/.config/gputop/tokens/gpu-node-01
+  #   ca_file: ~/.config/gputop/ca.pem
+
+server:                  # used by: gputop --service
+  listen: 127.0.0.1:9469
+  # tls_cert_file: /etc/gputop/tls.crt
+  # tls_key_file: /etc/gputop/tls.key
+  # client_ca_file: /etc/gputop/clients-ca.crt   # enables mutual TLS
+  # token_sha256: <output of gputop --gen-token>
+  expose_processes: true
+
+prometheus:
+  enabled: true
+  path: /metrics
+
+logging:
+  level: warn
+
+ui:
+  default_tab: overview
+  temperature_unit: c
+  show_command_lines: false
