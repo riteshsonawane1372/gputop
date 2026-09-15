@@ -9,6 +9,27 @@ machine, *"what happened 15 minutes ago?"*
 It currently supports **NVIDIA GPUs** through NVML, on a vendor-neutral core
 designed for AMD, Intel and other accelerators.
 
+## Screenshots
+
+<p align="center">
+  <img src="images/01.png" alt="gputop overview showing a GPU fleet, live charts, processes, and events" width="100%">
+</p>
+
+<p align="center">
+  <img src="images/02.png" alt="gputop GPU details" width="49%">
+  <img src="images/03.png" alt="gputop process monitoring" width="49%">
+</p>
+<p align="center">
+  <img src="images/04.png" alt="gputop memory and power monitoring" width="49%">
+  <img src="images/05.png" alt="gputop thermal and PCIe monitoring" width="49%">
+</p>
+<p align="center">
+  <img src="images/06.png" alt="gputop history and event views" width="49%">
+</p>
+
+<details>
+<summary>Text-only demo preview</summary>
+
 ```text
  ◆ gputop ▸ gpu-node-01             DEMO · SIMULATED          driver simulated · CUDA 12.6 · 8× H100 80GB HBM        ⟳ 1s  11:42:26
  1 Overview  2 GPUs  3 Processes  4 Memory  5 Power  6 Thermals  7 NVLink  8 PCIe  9 MIG  Nodes  Kubernetes  Workloads  Network  ›
@@ -53,10 +74,13 @@ designed for AMD, Intel and other accelerators.
 <sub>Rendered from `gputop --demo` (simulated GPUs) at 132×38 with colors removed. GPU 3 is the
 demo's straggler: its PCIe link trained at x8.</sub>
 
+</details>
+
 ---
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Why gputop](#why-gputop)
 - [Status](#status)
 - [Installation](#installation)
@@ -140,6 +164,9 @@ sha256sum --ignore-missing -c checksums.txt
 tar xzf gputop_<version>_linux_amd64.tar.gz
 sudo install gputop /usr/local/bin/
 ```
+
+Every push to `main` also refreshes the pre-release packages in the
+[latest main build](https://github.com/gputop/gputop/releases/tag/main-build).
 
 With Go 1.25 or newer:
 
