@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="gputop — a fast, keyboard-first terminal monitor for GPU infrastructure.">
+  <title>gputop — GPU infrastructure, in focus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="nav shell">
+    <a class="brand" href="#top" aria-label="gputop home"><span class="brand-mark">◆</span>gputop</a>
+    <nav aria-label="Main navigation">
+      <a href="#features">Features</a><a href="#tracks">What it tracks</a><a href="#quickstart">Quickstart</a><a href="#docs">Docs</a>
+    </nav>
+    <a class="nav-github" href="https://github.com/gputop/gputop">GitHub <span>↗</span></a>
+  </header>
+
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span>Open-source GPU observability</p>
+        <h1>Your GPUs.<br><em>At a glance.</em></h1>
+        <p class="lede">A fast, keyboard-first terminal monitor for GPU infrastructure. See what is happening now — and rewind to understand what happened before.</p>
+        <div class="actions">
+          <a class="button primary" href="#quickstart">Get started <span>→</span></a>
+          <a class="button secondary" href="https://github.com/gputop/gputop">View source <span>↗</span></a>
+        </div>
+        <div class="platforms"><span>Built for</span><b>Linux + NVIDIA</b><i></i><b>macOS + Apple silicon</b></div>
+      </div>
+      <div class="terminal-wrap">
+        <div class="terminal-glow"></div>
+        <div class="terminal">
+          <div class="terminal-top"><div class="dots"><i></i><i></i><i></i></div><span>gputop · gpu-node-01</span><small>LIVE</small></div>
+          <div class="terminal-body">
+            <div class="t-tabs">1 Overview&nbsp;&nbsp; 2 GPUs&nbsp;&nbsp; 3 Processes&nbsp;&nbsp; 4 Memory</div>
+            <div class="t-grid">
+              <div class="t-card fleet"><label>Fleet <b>8 GPUs</b></label><p>Allocated <strong>8/8</strong></p><p>Health <strong class="mint">96 avg</strong></p><p>Power <strong>3,926 W <span>/ 5,600 W</span></strong></p><p>VRAM <strong>447 GiB <span>/ 640 GiB</span></strong></p></div>
+              <div class="t-card live"><label>Live <b>10m</b></label><div class="chart">▁▁▂▂▃▃▄▃▅▄▆▅▄▃▄▅▇▆▅▆▇█▇▆▅▅▆▅▄▃▃▄▅▆▇</div><small>avg utilization <b>71%</b></small><div class="chart power">▂▃▃▄▅▄▅▅▆▅▃▄▃▄▅▇▆▆▅▆▇▇█▇▆▅▅▆▅▄</div><small>total power <b>3926 W</b></small></div>
+            </div>
+            <div class="t-card table"><label>GPUs <b>8 GPUs</b></label><div class="head"># &nbsp; NAME <span>UTIL</span><span>VRAM</span><span>TEMP</span><span>POWER</span><span>HEALTH</span></div><div>0 &nbsp; H100 80GB HBM <span class="bar">███████████▊ 98%</span><span>66.2 / 80G</span><span>72°C</span><span>641 W</span><span class="ok">100 ●</span></div><div>1 &nbsp; H100 80GB HBM <span class="bar">███████████▋ 97%</span><span>66.0 / 80G</span><span>70°C</span><span>653 W</span><span class="ok">100 ●</span></div><div>3 &nbsp; <span class="warn">⚠</span> H100 80GB HBM <span class="bar dim">███████▏░░░░ 55%</span><span>66.4 / 80G</span><span>54°C</span><span>396 W</span><span class="amber">75 ◐</span></div></div>
+          </div>
+          <div class="terminal-foot">↑ select &nbsp; ⏎ detail &nbsp; h history &nbsp; p pause &nbsp; ? help &nbsp; q quit</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="marquee"><div><span>LIVE TELEMETRY</span><b>◆</b><span>TIME MACHINE HISTORY</span><b>◆</b><span>HEALTH SIGNALS</span><b>◆</b><span>KUBERNETES AWARE</span><b>◆</b><span>LIVE TELEMETRY</span><b>◆</b><span>TIME MACHINE HISTORY</span><b>◆</b></div></section>
+
+    <section id="features" class="section shell">
+      <div class="section-intro"><p class="eyebrow"><span></span>Built for the console</p><h2>Signal, not noise.</h2><p>Everything you need to understand GPU behavior, arranged for fast scanning and quick investigation.</p></div>
+      <div class="feature-grid">
+        <article class="feature feature-wide"><div><p class="number">01</p><h3>One clear fleet view</h3><p>Utilization, VRAM, temperature, power, health and state — per GPU, in a single dense overview.</p></div><div class="mini-bars"><i style="height:79%"></i><i style="height:92%"></i><i style="height:86%"></i><i class="alert" style="height:49%"></i><i style="height:88%"></i><i style="height:90%"></i><i style="height:32%"></i><i style="height:10%"></i></div></article>
+        <article class="feature"><p class="number">02</p><div class="feature-icon">↶</div><h3>Rewind with history</h3><p>Scrub metrics and events through a configurable on-disk time machine. Find the moment a system changed.</p></article>
+        <article class="feature"><p class="number">03</p><div class="feature-icon">⌁</div><h3>Trace every workload</h3><p>Follow GPU to process, container, pod and workload. Spot idle allocations and stragglers.</p></article>
+        <article class="feature"><p class="number">04</p><div class="feature-icon">◈</div><h3>Know what needs attention</h3><p>Health scores and events surface Xids, throttling, ECC, PCIe and NVLink issues with context.</p></article>
+      </div>
+    </section>
+
+    <section id="tracks" class="section tracks-section"><div class="shell tracks-layout"><div class="tracks-copy"><p class="eyebrow"><span></span>What gputop tracks</p><h2>The whole GPU story.</h2><p>gputop combines official vendor metrics with clearly-labelled derived insights. Unsupported values stay <code>N/A</code>, never misleading zeroes.</p><a class="text-link" href="metrics.html">Explore all metrics <span>→</span></a></div><div class="track-list"><div><b>01</b><span>Compute &amp; memory</span><small>GPU utilization, VRAM, clocks, processes, MIG</small></div><div><b>02</b><span>Power &amp; thermals</span><small>Power draw, energy, temperature, limits, throttle reasons</small></div><div><b>03</b><span>Fabric &amp; I/O</span><small>NVLink, PCIe state, throughput, topology and errors</small></div><div><b>04</b><span>Health &amp; events</span><small>ECC, Xids, row remapping, retired pages and alerts</small></div><div><b>05</b><span>Infrastructure</span><small>CPU, RAM, disks, network, InfiniBand and Kubernetes</small></div></div></div></section>
+
+    <section class="showcase shell"><div class="showcase-head"><p class="eyebrow"><span></span>Made to investigate</p><p>Sixteen focused views, one fast workflow.</p></div><img src="assets/images/overview.png" alt="gputop overview with fleet metrics, live charts, GPU table and events"></section>
+
+    <section id="quickstart" class="section shell quickstart"><div class="section-intro"><p class="eyebrow"><span></span>Start in seconds</p><h2>Meet your GPU fleet.</h2></div><div class="steps"><article><b>01</b><h3>Download</h3><p>Grab the latest release for Linux or macOS.</p></article><article><b>02</b><h3>Install</h3><p>Make it executable and put it on your PATH.</p></article><article><b>03</b><h3>Run</h3><p>Launch the TUI — or try the full demo without hardware.</p></article></div><div class="codeblock"><div class="code-head"><span>Terminal</span><button type="button" data-copy="curl -fLo gputop https://github.com/gputop/gputop/releases/latest/download/gputop-linux-amd64&#10;chmod +x gputop &amp;&amp; sudo install gputop /usr/local/bin/&#10;gputop --demo">Copy</button></div><pre><code><span class="prompt">$</span> curl -fLo gputop https://github.com/gputop/gputop/releases/latest/download/gputop-linux-amd64
+<span class="prompt">$</span> chmod +x gputop &amp;&amp; sudo install gputop /usr/local/bin/
+<span class="prompt">$</span> gputop --demo</code></pre></div><p class="install-note">Have Go 1.25+? Run <code>go install github.com/gputop/gputop/cmd/gputop@latest</code>.</p></section>
+
+    <section class="command-section"><div class="shell"><p class="eyebrow"><span></span>One binary, many ways to use it</p><div class="command-grid"><div><code>gputop</code><span>Interactive GPU terminal</span></div><div><code>gputop --demo</code><span>Explore simulated GPUs</span></div><div><code>gputop --once --json</code><span>One machine-readable snapshot</span></div><div><code>gputop --service</code><span>HTTP API + Prometheus agent</span></div><div><code>gputop --remote gpu-node-01</code><span>Connect to a remote agent</span></div><div><code>gputop --print-config</code><span>View effective configuration</span></div></div></div></section>
+
+    <section id="docs" class="section shell docs"><div class="section-intro"><p class="eyebrow"><span></span>Documentation</p><h2>Everything, explained.</h2><p>Guides for running gputop locally, in production, and across your GPU fleet.</p></div><div class="docs-grid"><a href="configuration.html"><b>Configuration</b><span>Set refresh tiers, retention, themes, keys and server options.</span><i>→</i></a><a href="metrics.html"><b>Metrics reference</b><span>Understand each collected and derived metric.</span><i>→</i></a><a href="health-score.html"><b>Health score</b><span>Learn how gputop identifies risk and explains it.</span><i>→</i></a><a href="kubernetes.html"><b>Kubernetes</b><span>Deploy as a DaemonSet and correlate workloads.</span><i>→</i></a><a href="remote.html"><b>Remote monitoring</b><span>Connect agents securely across nodes.</span><i>→</i></a><a href="themes.html"><b>Themes</b><span>Make the terminal look exactly the way you work.</span><i>→</i></a></div></section>
+
+    <section class="cta shell"><div><p class="eyebrow"><span></span>Open source</p><h2>Bring clarity to your compute.</h2></div><a class="button primary" href="https://github.com/gputop/gputop">Star gputop on GitHub <span>↗</span></a></section>
+  </main>
+  <footer class="shell"><a class="brand" href="#top"><span class="brand-mark">◆</span>gputop</a><span>GPU infrastructure, in focus.</span><div><a href="https://github.com/gputop/gputop">GitHub</a><a href="https://github.com/gputop/gputop/blob/main/LICENSE">MIT License</a></div></footer>
+  <script src="assets/site.js"></script>
+</body>
+</html>
