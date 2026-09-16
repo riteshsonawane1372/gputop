@@ -63,6 +63,16 @@
 }
 .doc h3 { font-size: 19px; margin: 32px 0 10px; }
 
+/* Several docs title their sections with a backticked key (## `refresh`).
+   Inside a heading that should read as a heading, not a boxed token. */
+.doc h1 code, .doc h2 code, .doc h3 code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.95em;
+  color: var(--acc);
+}
+
 .doc p, .doc li { color: var(--muted); }
 .doc li { margin-bottom: 6px; }
 .doc strong { color: var(--ink); }
