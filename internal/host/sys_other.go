@@ -5,7 +5,7 @@
 
 package host
 
-import "github.com/gputop/gputop/internal/metric"
+import "github.com/riteshsonawane1372/gputop/internal/metric"
 
 func cpuFrequency() metric.Opt[float64] { return metric.None[float64]() }
 

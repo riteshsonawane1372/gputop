@@ -13,7 +13,7 @@ upgrade to the newest version.
 **Please do not open public issues for security problems.**
 
 Report vulnerabilities privately through
-[GitHub Security Advisories](https://github.com/gputop/gputop/security/advisories/new).
+[GitHub Security Advisories](https://github.com/riteshsonawane1372/gputop/security/advisories/new).
 Include:
 
 - affected version and platform,

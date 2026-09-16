@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gputop/gputop/internal/paths"
+	"github.com/riteshsonawane1372/gputop/internal/paths"
 	"go.yaml.in/yaml/v3"
 )
 

@@ -12,9 +12,9 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 var zoneMarker = regexp.MustCompile(`\x1b\[\d+z`)

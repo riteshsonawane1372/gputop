@@ -7,7 +7,7 @@ package main
 import (
 	"os"
 
-	"github.com/gputop/gputop/internal/cli"
+	"github.com/riteshsonawane1372/gputop/internal/cli"
 )
 
 func main() {

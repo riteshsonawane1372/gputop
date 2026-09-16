@@ -22,17 +22,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gputop/gputop/internal/app"
-	"github.com/gputop/gputop/internal/buildinfo"
-	"github.com/gputop/gputop/internal/config"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/logging"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/paths"
-	"github.com/gputop/gputop/internal/remote"
-	"github.com/gputop/gputop/internal/server"
-	"github.com/gputop/gputop/internal/theme"
-	"github.com/gputop/gputop/internal/tui"
+	"github.com/riteshsonawane1372/gputop/internal/app"
+	"github.com/riteshsonawane1372/gputop/internal/buildinfo"
+	"github.com/riteshsonawane1372/gputop/internal/config"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/logging"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/paths"
+	"github.com/riteshsonawane1372/gputop/internal/remote"
+	"github.com/riteshsonawane1372/gputop/internal/server"
+	"github.com/riteshsonawane1372/gputop/internal/theme"
+	"github.com/riteshsonawane1372/gputop/internal/tui"
 	"github.com/mattn/go-isatty"
 )
 
@@ -102,7 +102,7 @@ func Main(args []string, stdout, stderr io.Writer) int {
 	fs.Usage = func() {
 		fmt.Fprint(stderr, usage)
 		fs.PrintDefaults()
-		fmt.Fprintf(stderr, "\nDocumentation: https://github.com/gputop/gputop\n")
+		fmt.Fprintf(stderr, "\nDocumentation: https://github.com/riteshsonawane1372/gputop\n")
 	}
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {

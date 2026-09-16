@@ -15,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/config"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/server"
+	"github.com/riteshsonawane1372/gputop/internal/config"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/server"
 )
 
 type src struct {

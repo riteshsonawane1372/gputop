@@ -1,6 +1,6 @@
 # gputop developer tasks. CI runs the same commands.
 GO       ?= go
-PKG      := github.com/gputop/gputop
+PKG      := github.com/riteshsonawane1372/gputop
 VERSION  ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 LDFLAGS  := -s -w -X $(PKG)/internal/buildinfo.Version=$(VERSION)
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 darwin/arm64

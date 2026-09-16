@@ -12,11 +12,11 @@ package model
 import (
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/health"
-	"github.com/gputop/gputop/internal/host"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/health"
+	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 // SchemaVersion identifies the JSON schema of Snapshot.

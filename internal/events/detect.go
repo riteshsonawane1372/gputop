@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/health"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/health"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // Detector derives events from consecutive snapshots. It keeps debounce

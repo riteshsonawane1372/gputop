@@ -10,7 +10,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/gputop/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
 )
 
 // TestIntegrationRealNVML exercises the real libnvidia-ml. It skips when

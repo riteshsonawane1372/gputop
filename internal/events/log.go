@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // Log is a bounded, thread-safe ring buffer of events.

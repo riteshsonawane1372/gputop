@@ -6,7 +6,7 @@ package apple
 import (
 	"strings"
 
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 // stateResidency is one IOReport state and the time spent in it.

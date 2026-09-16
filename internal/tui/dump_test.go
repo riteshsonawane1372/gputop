@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/gputop/gputop/internal/collector"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/gpu/sim"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/collector"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/host"
 )
 
 // TestDumpFrames writes rendered frames for visual review when

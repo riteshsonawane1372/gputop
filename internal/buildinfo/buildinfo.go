@@ -3,7 +3,7 @@
 
 // Package buildinfo carries version information injected at link time:
 //
-//	go build -ldflags "-X github.com/gputop/gputop/internal/buildinfo.Version=v0.1.0"
+//	go build -ldflags "-X github.com/riteshsonawane1372/gputop/internal/buildinfo.Version=v0.1.0"
 package buildinfo
 
 import (

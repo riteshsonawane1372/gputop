@@ -12,11 +12,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 var windows = []time.Duration{time.Minute, 5 * time.Minute, 10 * time.Minute, 15 * time.Minute, 30 * time.Minute,

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 var now = time.Unix(1_800_000_000, 0)

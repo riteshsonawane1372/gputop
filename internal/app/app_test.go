@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/gputop/gputop/internal/config"
-	"github.com/gputop/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/config"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
 )
 
 func TestAutoProvider(t *testing.T) {

@@ -158,13 +158,13 @@ gputop is pre-1.0. Features are marked as:
 
 ## Installation
 
-Every [GitHub release](https://github.com/gputop/gputop/releases) attaches a
+Every [GitHub release](https://github.com/riteshsonawane1372/gputop/releases) attaches a
 ready-to-run executable per platform (`gputop-linux-amd64`,
 `gputop-linux-arm64`, `gputop-darwin-arm64`, `gputop-darwin-amd64`) plus
 `checksums.txt`:
 
 ```bash
-curl -fLo gputop https://github.com/gputop/gputop/releases/latest/download/gputop-linux-amd64
+curl -fLo gputop https://github.com/riteshsonawane1372/gputop/releases/latest/download/gputop-linux-amd64
 chmod +x gputop && sudo install gputop /usr/local/bin/
 ```
 
@@ -180,13 +180,13 @@ Releases follow [semantic versioning](https://semver.org/):
 With Go 1.25 or newer:
 
 ```bash
-go install github.com/gputop/gputop/cmd/gputop@latest
+go install github.com/riteshsonawane1372/gputop/cmd/gputop@latest
 ```
 
 From source:
 
 ```bash
-git clone https://github.com/gputop/gputop
+git clone https://github.com/riteshsonawane1372/gputop
 cd gputop
 make build
 ./bin/gputop --demo

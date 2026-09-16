@@ -13,11 +13,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 // The Kubernetes tab follows k9s: a pod list, a describe view (enter or d)

@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	ghost "github.com/shirou/gopsutil/v4/host"

@@ -18,9 +18,9 @@ builds:
     flags: [-trimpath]
     ldflags:
       - -s -w
-      - -X github.com/gputop/gputop/internal/buildinfo.Version=v{{ .Version }}
-      - -X github.com/gputop/gputop/internal/buildinfo.Commit={{ .Commit }}
-      - -X github.com/gputop/gputop/internal/buildinfo.Date={{ .Date }}
+      - -X github.com/riteshsonawane1372/gputop/internal/buildinfo.Version=v{{ .Version }}
+      - -X github.com/riteshsonawane1372/gputop/internal/buildinfo.Commit={{ .Commit }}
+      - -X github.com/riteshsonawane1372/gputop/internal/buildinfo.Date={{ .Date }}
     mod_timestamp: "{{ .CommitTimestamp }}"
 
 archives:

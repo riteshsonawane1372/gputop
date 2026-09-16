@@ -5,9 +5,9 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 // tabDef describes one tab. Tabs are hidden when they have nothing

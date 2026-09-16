@@ -6,7 +6,7 @@ package gpu
 import (
 	"time"
 
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 // HealthCounters are reliability counters collected on the normal tier.

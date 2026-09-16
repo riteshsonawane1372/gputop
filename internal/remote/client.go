@@ -27,12 +27,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gputop/gputop/internal/config"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/paths"
-	"github.com/gputop/gputop/internal/server"
-	"github.com/gputop/gputop/internal/tui"
+	"github.com/riteshsonawane1372/gputop/internal/config"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/paths"
+	"github.com/riteshsonawane1372/gputop/internal/server"
+	"github.com/riteshsonawane1372/gputop/internal/tui"
 )
 
 // TokenEnv is the default environment variable holding a remote token.

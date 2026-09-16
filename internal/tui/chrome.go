@@ -10,9 +10,9 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 type hint struct {

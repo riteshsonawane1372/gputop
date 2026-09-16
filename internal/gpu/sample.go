@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 // Sample is a fast-tier reading of dynamic device state.

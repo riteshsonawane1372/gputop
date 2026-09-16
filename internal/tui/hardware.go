@@ -8,9 +8,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 // splitTableChart lays out a GPU table above a live chart of the selected GPU.

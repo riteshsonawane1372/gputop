@@ -10,11 +10,11 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gputop/gputop/internal/health"
-	"github.com/gputop/gputop/internal/keymap"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/tui/widgets"
+	"github.com/riteshsonawane1372/gputop/internal/health"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/tui/widgets"
 )
 
 // kv renders an aligned "label  value" line.

@@ -9,7 +9,7 @@ Requirements: Go 1.25+, `make`, and optionally
 [golangci-lint](https://golangci-lint.run) v2 and Docker.
 
 ```bash
-git clone https://github.com/gputop/gputop
+git clone https://github.com/riteshsonawane1372/gputop
 cd gputop
 make build
 ./bin/gputop --demo       # simulated GPUs, works on any machine

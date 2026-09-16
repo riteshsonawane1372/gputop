@@ -11,13 +11,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/derive"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/gpu/sim"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/host"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/derive"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 func fastIntervals() Intervals {

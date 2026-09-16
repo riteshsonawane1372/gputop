@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/gputop/gputop/internal/theme"
+	"github.com/riteshsonawane1372/gputop/internal/theme"
 )
 
 // BoxOpts configure a bordered panel.

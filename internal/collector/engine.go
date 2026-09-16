@@ -29,17 +29,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gputop/gputop/internal/buildinfo"
-	"github.com/gputop/gputop/internal/derive"
-	"github.com/gputop/gputop/internal/events"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/health"
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/host"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
-	"github.com/gputop/gputop/internal/procinfo"
+	"github.com/riteshsonawane1372/gputop/internal/buildinfo"
+	"github.com/riteshsonawane1372/gputop/internal/derive"
+	"github.com/riteshsonawane1372/gputop/internal/events"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/health"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/procinfo"
 )
 
 // Intervals are the collection tiers.

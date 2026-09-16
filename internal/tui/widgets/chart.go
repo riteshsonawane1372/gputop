@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/gputop/gputop/internal/theme"
+	"github.com/riteshsonawane1372/gputop/internal/theme"
 )
 
 // ChartOpts configure a braille area chart.

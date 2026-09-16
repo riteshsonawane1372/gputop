@@ -10,7 +10,7 @@
 package gpu
 
 import (
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 // Vendor identifies an accelerator vendor.

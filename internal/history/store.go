@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // SeriesMeta labels a series (GPU index and name at last observation).

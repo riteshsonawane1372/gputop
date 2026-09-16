@@ -14,7 +14,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
 )
 
 // Band is the qualitative interpretation of a score.

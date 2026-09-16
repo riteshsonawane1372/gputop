@@ -10,8 +10,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/keymap"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/keymap"
 )
 
 // Mouse support, k9s style: click a tab to open it, click a row to select

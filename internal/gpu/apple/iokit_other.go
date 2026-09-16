@@ -8,7 +8,7 @@ package apple
 import (
 	"errors"
 
-	"github.com/gputop/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
 )
 
 type unsupportedBackend struct{}

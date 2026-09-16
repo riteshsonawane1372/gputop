@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/metric"
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 type clock struct{ t time.Time }

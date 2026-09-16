@@ -7,7 +7,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/gputop/gputop/internal/theme"
+	"github.com/riteshsonawane1372/gputop/internal/theme"
 )
 
 var partials = []string{"", "▏", "▎", "▍", "▌", "▋", "▊", "▉"}

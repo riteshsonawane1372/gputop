@@ -1,4 +1,4 @@
-module github.com/gputop/gputop
+module github.com/riteshsonawane1372/gputop
 
 go 1.25.3
 

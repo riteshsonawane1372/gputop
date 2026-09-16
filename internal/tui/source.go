@@ -6,9 +6,9 @@ package tui
 import (
 	"context"
 
-	"github.com/gputop/gputop/internal/history"
-	"github.com/gputop/gputop/internal/kube"
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // Source supplies snapshots to the UI. The local collector engine and the

@@ -19,7 +19,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // On-disk format

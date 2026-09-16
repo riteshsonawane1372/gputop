@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 func run(t *testing.T, args ...string) (int, string, string) {

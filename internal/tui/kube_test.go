@@ -11,7 +11,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/gputop/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
 )
 
 // inspectSource adds canned pod logs and events to a static source.

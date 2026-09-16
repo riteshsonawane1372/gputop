@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/metric"
+	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
 
 func TestCollectorSmoke(t *testing.T) {

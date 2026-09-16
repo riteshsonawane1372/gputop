@@ -6,7 +6,7 @@ package tui
 import (
 	"math"
 
-	"github.com/gputop/gputop/internal/model"
+	"github.com/riteshsonawane1372/gputop/internal/model"
 )
 
 // liveCap is the number of recent samples kept for live charts (at the

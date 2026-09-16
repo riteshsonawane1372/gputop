@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/gpu/nvidia/nvml"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu/nvidia/nvml"
 )
 
 // fakeNVML simulates two GPUs:

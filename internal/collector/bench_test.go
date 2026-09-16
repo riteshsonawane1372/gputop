@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gputop/gputop/internal/gpu"
-	"github.com/gputop/gputop/internal/gpu/sim"
-	"github.com/gputop/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
+	"github.com/riteshsonawane1372/gputop/internal/history"
 )
 
 func benchEngine(b *testing.B, n int, withHistory bool) *Engine {

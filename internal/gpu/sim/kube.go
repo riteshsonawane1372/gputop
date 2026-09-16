@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gputop/gputop/internal/kube"
+	"github.com/riteshsonawane1372/gputop/internal/kube"
 )
 
 var _ kube.Simulator = (*Provider)(nil)
