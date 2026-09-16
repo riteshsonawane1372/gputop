@@ -10,8 +10,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/riteshsonawane1372/gputop/internal/theme"
 	"github.com/muesli/termenv"
+	"github.com/riteshsonawane1372/gputop/internal/theme"
 )
 
 func th() *theme.Theme {

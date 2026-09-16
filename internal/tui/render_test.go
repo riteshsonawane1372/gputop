@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/charmbracelet/x/ansi"
+	"github.com/muesli/termenv"
 	"github.com/riteshsonawane1372/gputop/internal/collector"
 	"github.com/riteshsonawane1372/gputop/internal/gpu"
 	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
@@ -20,7 +21,6 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/keymap"
 	"github.com/riteshsonawane1372/gputop/internal/model"
 	"github.com/riteshsonawane1372/gputop/internal/theme"
-	"github.com/muesli/termenv"
 )
 
 type staticSource struct {
