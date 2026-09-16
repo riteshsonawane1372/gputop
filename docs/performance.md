@@ -1,3 +1,7 @@
+---
+title: Performance
+---
+
 # Performance
 
 A monitoring tool must not become the problem. gputop's performance targets:

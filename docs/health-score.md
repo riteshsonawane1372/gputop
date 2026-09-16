@@ -1,3 +1,7 @@
+---
+title: Health score
+---
+
 # Health score
 
 The health score is a **gputop-derived** 0–100 summary of reliability signals.

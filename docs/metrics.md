@@ -1,3 +1,7 @@
+---
+title: Metrics and provenance
+---
+
 # Metrics and provenance
 
 Every value gputop shows has a source:

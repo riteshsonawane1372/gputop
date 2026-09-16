@@ -1,81 +1,359 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="gputop — a fast, keyboard-first terminal monitor for GPU infrastructure.">
-  <title>gputop — GPU infrastructure, in focus</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/site.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>gputop — a terminal monitor for GPU infrastructure</title>
+<meta name="description" content="gputop is a fast, keyboard-first terminal monitor for NVIDIA and Apple silicon GPUs. Live telemetry, scrubbable history, health scoring and workload correlation — from one static binary.">
+<meta name="theme-color" content="#080a0b" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#fbfaf7" media="(prefers-color-scheme: light)">
+<link rel="canonical" href="https://gputop.riteshsonawane.com/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://gputop.riteshsonawane.com/">
+<meta property="og:title" content="gputop — a terminal monitor for GPU infrastructure">
+<meta property="og:description" content="Live GPU telemetry, scrubbable history, health scoring and workload correlation, in one keyboard-first terminal UI.">
+<meta property="og:image" content="https://gputop.riteshsonawane.com/assets/images/overview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="gputop — a terminal monitor for GPU infrastructure">
+<meta name="twitter:description" content="Live GPU telemetry, scrubbable history, health scoring and workload correlation, in one keyboard-first terminal UI.">
+<meta name="twitter:image" content="https://gputop.riteshsonawane.com/assets/images/overview.png">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080a0b'/%3E%3Ctext x='16' y='23' font-family='monospace' font-size='20' font-weight='bold' fill='%23a5f53f' text-anchor='middle'%3E%E2%97%86%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  /* Apply a stored theme before first paint to avoid a flash. */
+  try {
+    var t = localStorage.getItem("gputop-theme");
+    if (t === "dark" || t === "light") {
+      document.documentElement.setAttribute("data-theme", t);
+    }
+  } catch (e) {}
+</script>
 </head>
 <body>
-  <div class="noise" aria-hidden="true"></div>
-  <header class="nav shell">
-    <a class="brand" href="#top" aria-label="gputop home"><span class="brand-mark">◆</span>gputop</a>
-    <nav aria-label="Main navigation">
-      <a href="#features">Features</a><a href="#tracks">What it tracks</a><a href="#quickstart">Quickstart</a><a href="#docs">Docs</a>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <div class="shell">
+    <a class="brand" href="#top"><b>◆</b>gputop</a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#why">Why</a>
+      <a href="#views">Views</a>
+      <a href="#keyboard">Keyboard</a>
+      <a href="#status">Status</a>
+      <a href="#install">Install</a>
+      <a href="#docs">Docs</a>
     </nav>
-    <a class="nav-github" href="https://github.com/riteshsonawane1372/gputop">GitHub <span>↗</span></a>
-  </header>
+    <div class="nav-end">
+      <button class="icon-button" id="theme-toggle" type="button"
+              aria-label="Switch colour theme" title="Switch colour theme">◐</button>
+      <a class="ghost-link" href="https://github.com/riteshsonawane1372/gputop">GitHub ↗</a>
+    </div>
+  </div>
+</header>
 
-  <main id="top">
-    <section class="hero shell">
-      <div class="hero-copy">
-        <p class="eyebrow"><span></span>Open-source GPU observability</p>
-        <h1>Your GPUs.<br><em>At a glance.</em></h1>
-        <p class="lede">A fast, keyboard-first terminal monitor for GPU infrastructure. See what is happening now — and rewind to understand what happened before.</p>
-        <div class="actions">
-          <a class="button primary" href="#quickstart">Get started <span>→</span></a>
-          <a class="button secondary" href="https://github.com/riteshsonawane1372/gputop">View source <span>↗</span></a>
-        </div>
-        <div class="platforms"><span>Built for</span><b>Linux + NVIDIA</b><i></i><b>macOS + Apple silicon</b></div>
+<main id="main">
+<div id="top"></div>
+
+<!-- ------------------------------------------------------------- hero -->
+<section class="shell hero">
+  <div>
+    <a class="status-pill" href="#status">
+      <b>v0.2.x</b> · pre-1.0 — experimental areas marked below
+    </a>
+    <h1>Your GPUs.<br><em>At a glance.</em></h1>
+    <p class="lede">
+      A keyboard-first terminal monitor for GPU infrastructure. See what is
+      happening now, rewind to see what happened before, and trace any GPU back
+      to the process, container and pod using it.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="#install">Install <span aria-hidden="true">→</span></a>
+      <a class="button secondary" href="https://github.com/riteshsonawane1372/gputop">View source <span aria-hidden="true">↗</span></a>
+    </div>
+    <p class="platforms">
+      <b>Linux + NVIDIA</b><i></i><b>macOS + Apple silicon</b><i></i>
+      <b>one static binary</b><i></i><b>no root, no cgo</b>
+    </p>
+  </div>
+
+  <div>
+    <div class="terminal">
+      <div class="terminal-top">
+        <div class="dots" aria-hidden="true"><i></i><i></i><i></i></div>
+        <span>gputop — Overview</span>
+        <small>LIVE</small>
       </div>
-      <div class="terminal-wrap">
-        <div class="terminal-glow"></div>
-        <div class="terminal">
-          <div class="terminal-top"><div class="dots"><i></i><i></i><i></i></div><span>gputop · gpu-node-01</span><small>LIVE</small></div>
-          <div class="terminal-body">
-            <div class="t-tabs">1 Overview&nbsp;&nbsp; 2 GPUs&nbsp;&nbsp; 3 Processes&nbsp;&nbsp; 4 Memory</div>
-            <div class="t-grid">
-              <div class="t-card fleet"><label>Fleet <b>8 GPUs</b></label><p>Allocated <strong>8/8</strong></p><p>Health <strong class="mint">96 avg</strong></p><p>Power <strong>3,926 W <span>/ 5,600 W</span></strong></p><p>VRAM <strong>447 GiB <span>/ 640 GiB</span></strong></p></div>
-              <div class="t-card live"><label>Live <b>10m</b></label><div class="chart">▁▁▂▂▃▃▄▃▅▄▆▅▄▃▄▅▇▆▅▆▇█▇▆▅▅▆▅▄▃▃▄▅▆▇</div><small>avg utilization <b>71%</b></small><div class="chart power">▂▃▃▄▅▄▅▅▆▅▃▄▃▄▅▇▆▆▅▆▇▇█▇▆▅▅▆▅▄</div><small>total power <b>3926 W</b></small></div>
-            </div>
-            <div class="t-card table"><label>GPUs <b>8 GPUs</b></label><div class="head"># &nbsp; NAME <span>UTIL</span><span>VRAM</span><span>TEMP</span><span>POWER</span><span>HEALTH</span></div><div>0 &nbsp; H100 80GB HBM <span class="bar">███████████▊ 98%</span><span>66.2 / 80G</span><span>72°C</span><span>641 W</span><span class="ok">100 ●</span></div><div>1 &nbsp; H100 80GB HBM <span class="bar">███████████▋ 97%</span><span>66.0 / 80G</span><span>70°C</span><span>653 W</span><span class="ok">100 ●</span></div><div>3 &nbsp; <span class="warn">⚠</span> H100 80GB HBM <span class="bar dim">███████▏░░░░ 55%</span><span>66.4 / 80G</span><span>54°C</span><span>396 W</span><span class="amber">75 ◐</span></div></div>
-          </div>
-          <div class="terminal-foot">↑ select &nbsp; ⏎ detail &nbsp; h history &nbsp; p pause &nbsp; ? help &nbsp; q quit</div>
-        </div>
+      <div class="terminal-cmd"><span>$</span> gputop --demo --demo-gpus 8</div>
+      <div class="terminal-body">
+<pre><code><span class="t-dim">gputop  gpu-node-01  [DEMO: simulated data]  CUDA 12.6</span>
+<span class="t-head">GPUs</span> 8  <span class="t-green">busy 5</span>  <span class="t-mint">active 2</span>  <span class="t-dim">idle 1</span>  power 4012 W  health <span class="t-mint">98</span>
+
+<span class="t-head">GPU  NAME                  UTIL  VRAM         TEMP  POWER  HEALTH  STATE</span>
+0    NVIDIA H100 80GB HBM  <span class="t-green"> 98%</span>  66.3/80 GiB  72°C  654 W  <span class="t-mint">100</span>     busy
+1    NVIDIA H100 80GB HBM  <span class="t-green"> 96%</span>  66.6/80 GiB  71°C  633 W  <span class="t-mint">100</span>     busy
+2    NVIDIA H100 80GB HBM  <span class="t-green"> 96%</span>  66.6/80 GiB  70°C  639 W  <span class="t-mint">100</span>     busy
+<span class="t-amber">3</span>    NVIDIA H100 80GB HBM  <span class="t-amber"> 52%</span>  66.4/80 GiB  53°C  376 W  <span class="t-amber"> 85</span>     <span class="t-amber">active,outlier</span>
+4    NVIDIA H100 80GB HBM  <span class="t-green"> 97%</span>  66.0/80 GiB  71°C  647 W  <span class="t-mint">100</span>     busy
+5    NVIDIA H100 80GB HBM  <span class="t-green"> 95%</span>  66.0/80 GiB  71°C  631 W  <span class="t-mint">100</span>     busy
+6    NVIDIA H100 80GB HBM  <span class="t-green"> 49%</span>  35.4/80 GiB  53°C  361 W  <span class="t-mint">100</span>     active
+7    NVIDIA H100 80GB HBM  <span class="t-dim">  0%</span>  16.4/80 GiB  34°C   70 W  <span class="t-mint">100</span>     <span class="t-dim">idle</span>
+
+<span class="t-amber">WARNING</span> GPU 3: PCIe link width x8 below maximum x16</code></pre>
       </div>
-    </section>
+      <div class="terminal-foot">↑ select · ⏎ detail · h history · p pause · ? help · q quit</div>
+    </div>
+    <p class="caption">Real output from demo mode — no GPU required to try it.</p>
+  </div>
+</section>
 
-    <section class="marquee"><div><span>LIVE TELEMETRY</span><b>◆</b><span>TIME MACHINE HISTORY</span><b>◆</b><span>HEALTH SIGNALS</span><b>◆</b><span>KUBERNETES AWARE</span><b>◆</b><span>LIVE TELEMETRY</span><b>◆</b><span>TIME MACHINE HISTORY</span><b>◆</b></div></section>
+<!-- -------------------------------------------------------------- why -->
+<section id="why" class="section shell">
+  <div class="section-intro">
+    <p class="eyebrow">Why gputop</p>
+    <h2>Questions, not dashboards.</h2>
+    <p>Every view exists to answer something you actually ask at 2am.</p>
+  </div>
 
-    <section id="features" class="section shell">
-      <div class="section-intro"><p class="eyebrow"><span></span>Built for the console</p><h2>Signal, not noise.</h2><p>Everything you need to understand GPU behavior, arranged for fast scanning and quick investigation.</p></div>
-      <div class="feature-grid">
-        <article class="feature feature-wide"><div><p class="number">01</p><h3>One clear fleet view</h3><p>Utilization, VRAM, temperature, power, health and state — per GPU, in a single dense overview.</p></div><div class="mini-bars"><i style="height:79%"></i><i style="height:92%"></i><i style="height:86%"></i><i class="alert" style="height:49%"></i><i style="height:88%"></i><i style="height:90%"></i><i style="height:32%"></i><i style="height:10%"></i></div></article>
-        <article class="feature"><p class="number">02</p><div class="feature-icon">↶</div><h3>Rewind with history</h3><p>Scrub metrics and events through a configurable on-disk time machine. Find the moment a system changed.</p></article>
-        <article class="feature"><p class="number">03</p><div class="feature-icon">⌁</div><h3>Trace every workload</h3><p>Follow GPU to process, container, pod and workload. Spot idle allocations and stragglers.</p></article>
-        <article class="feature"><p class="number">04</p><div class="feature-icon">◈</div><h3>Know what needs attention</h3><p>Health scores and events surface Xids, throttling, ECC, PCIe and NVLink issues with context.</p></article>
-      </div>
-    </section>
+  <div class="answers">
+    <div class="answer">
+      <q>Which GPU is busy?</q>
+      <p><span class="tag">Overview</span>Per-GPU utilization, VRAM, power, temperature, health and state in one dense table.</p>
+    </div>
+    <div class="answer">
+      <q>Which process is eating VRAM?</q>
+      <p><span class="tag">Processes</span>Sortable and searchable, resolved through to container, pod and workload.</p>
+    </div>
+    <div class="answer">
+      <q>Why is GPU 4 slow?</q>
+      <p><span class="tag">GPUs · History · Health</span>Throttle reasons, PCIe width, Xid events and outlier detection, side by side.</p>
+    </div>
+    <div class="answer">
+      <q>Is this GPU throttling?</q>
+      <p><span class="tag">Power · Thermals</span>Live clock-event reasons and the thresholds that triggered them.</p>
+    </div>
+    <div class="answer">
+      <q>Is NVLink healthy?</q>
+      <p><span class="tag">NVLink</span>Per-link state, throughput, error counters and topology.</p>
+    </div>
+    <div class="answer">
+      <q>What happened fifteen minutes ago?</q>
+      <p><span class="tag">History</span>Scrub any metric back through time, with events pinned on the timeline.</p>
+    </div>
+    <div class="answer">
+      <q>Which workload owns this GPU?</q>
+      <p><span class="tag">Kubernetes</span>GPU → process → container → pod → workload correlation.</p>
+    </div>
+    <div class="answer">
+      <q>Are we wasting GPUs?</q>
+      <p><span class="tag">Workloads</span>Idle-but-allocated GPUs, stragglers and an efficiency score.</p>
+    </div>
+  </div>
 
-    <section id="tracks" class="section tracks-section"><div class="shell tracks-layout"><div class="tracks-copy"><p class="eyebrow"><span></span>What gputop tracks</p><h2>The whole GPU story.</h2><p>gputop combines official vendor metrics with clearly-labelled derived insights. Unsupported values stay <code>N/A</code>, never misleading zeroes.</p><a class="text-link" href="metrics.html">Explore all metrics <span>→</span></a></div><div class="track-list"><div><b>01</b><span>Compute &amp; memory</span><small>GPU utilization, VRAM, clocks, processes, MIG</small></div><div><b>02</b><span>Power &amp; thermals</span><small>Power draw, energy, temperature, limits, throttle reasons</small></div><div><b>03</b><span>Fabric &amp; I/O</span><small>NVLink, PCIe state, throughput, topology and errors</small></div><div><b>04</b><span>Health &amp; events</span><small>ECC, Xids, row remapping, retired pages and alerts</small></div><div><b>05</b><span>Infrastructure</span><small>CPU, RAM, disks, network, InfiniBand and Kubernetes</small></div></div></div></section>
+  <p class="note">
+    Design rule: no metric without a reason. Unsupported values read
+    <code>N/A</code>, never <code>0</code> — and vendor metrics stay
+    distinguishable from gputop-derived ones.
+  </p>
+</section>
 
-    <section class="showcase shell"><div class="showcase-head"><p class="eyebrow"><span></span>Made to investigate</p><p>Sixteen focused views, one fast workflow.</p></div><img src="assets/images/overview.png" alt="gputop overview with fleet metrics, live charts, GPU table and events"></section>
+<!-- ------------------------------------------------------------ views -->
+<section id="views" class="section views-section">
+  <div class="shell">
+    <div class="section-intro">
+      <p class="eyebrow">Seventeen views</p>
+      <h2>One binary, seventeen lenses.</h2>
+      <p>Tabs appear only when they have something to show, so a laptop with one
+         GPU never renders an empty NVLink page.</p>
+    </div>
+    <div class="view-grid">
+      <div class="view"><i>1</i><b>Overview</b><span>Fleet, live charts, top processes, alerts</span></div>
+      <div class="view"><i>2</i><b>GPUs</b><span>Per-GPU detail and inventory</span></div>
+      <div class="view"><i>3</i><b>Processes</b><span>Sortable, searchable, correlated</span></div>
+      <div class="view"><i>4</i><b>Memory</b><span>VRAM, reserved, bandwidth, ECC</span></div>
+      <div class="view"><i>5</i><b>Power</b><span>Draw, energy, limits, capping</span></div>
+      <div class="view"><i>6</i><b>Thermals</b><span>Temperatures and throttle reasons</span></div>
+      <div class="view"><i>7</i><b>NVLink</b><span>Link state, throughput, errors</span></div>
+      <div class="view"><i>8</i><b>PCIe</b><span>Generation, width, throughput</span></div>
+      <div class="view"><i>9</i><b>MIG</b><span>Partition layout and use</span></div>
+      <div class="view"><i>·</i><b>Nodes</b><span>Remote node summaries</span></div>
+      <div class="view"><i>·</i><b>Kubernetes</b><span>k9s-style pods, describe, logs</span></div>
+      <div class="view"><i>·</i><b>Workloads</b><span>Idle allocation and stragglers</span></div>
+      <div class="view"><i>·</i><b>Network</b><span>Host NICs and InfiniBand</span></div>
+      <div class="view"><i>·</i><b>Dashboard</b><span>Metrics dashboard</span></div>
+      <div class="view"><i>·</i><b>History</b><span>Time machine and scrubbing</span></div>
+      <div class="view"><i>·</i><b>Events</b><span>Timeline and active alerts</span></div>
+      <div class="view"><i>·</i><b>Health</b><span>0–100 score with reasons</span></div>
+    </div>
+  </div>
+</section>
 
-    <section id="quickstart" class="section shell quickstart"><div class="section-intro"><p class="eyebrow"><span></span>Start in seconds</p><h2>Meet your GPU fleet.</h2></div><div class="steps"><article><b>01</b><h3>Download</h3><p>Grab the latest release for Linux or macOS.</p></article><article><b>02</b><h3>Install</h3><p>Make it executable and put it on your PATH.</p></article><article><b>03</b><h3>Run</h3><p>Launch the TUI — or try the full demo without hardware.</p></article></div><div class="codeblock"><div class="code-head"><span>Terminal</span><button type="button" data-copy="curl -fLo gputop https://github.com/riteshsonawane1372/gputop/releases/latest/download/gputop-linux-amd64&#10;chmod +x gputop &amp;&amp; sudo install gputop /usr/local/bin/&#10;gputop --demo">Copy</button></div><pre><code><span class="prompt">$</span> curl -fLo gputop https://github.com/riteshsonawane1372/gputop/releases/latest/download/gputop-linux-amd64
+<!-- --------------------------------------------------------- keyboard -->
+<section id="keyboard" class="section shell">
+  <div class="keys-layout">
+    <div class="section-intro" style="margin-bottom:0">
+      <p class="eyebrow">Keyboard first</p>
+      <h2>Hands stay home.</h2>
+      <p>
+        Every binding is configurable. A command bar (<kbd>:</kbd>) jumps
+        straight to pods, GPUs or the dashboard with tab completion — and the
+        mouse works too, if you want it.
+      </p>
+      <p class="note">
+        See <a href="configuration.html">Configuration</a> to remap any of these.
+      </p>
+    </div>
+    <div class="key-table">
+      <div class="key-row"><span><kbd>1</kbd>…<kbd>9</kbd> <kbd>Tab</kbd></span><span>Jump to a tab, or cycle</span></div>
+      <div class="key-row"><span><kbd>/</kbd></span><span>Search the current view</span></div>
+      <div class="key-row"><span><kbd>f</kbd></span><span>Filter — <code>gpu:0 user:alice ns:ml</code></span></div>
+      <div class="key-row"><span><kbd>h</kbd></span><span>History — the time machine</span></div>
+      <div class="key-row"><span><kbd>,</kbd> <kbd>.</kbd></span><span>Scrub back and forward in time</span></div>
+      <div class="key-row"><span><kbd>s</kbd> <kbd>S</kbd></span><span>Next sort column / reverse</span></div>
+      <div class="key-row"><span><kbd>:</kbd></span><span>Command bar — <code>:pods</code> <code>:gpus</code> <code>:dash</code></span></div>
+      <div class="key-row"><span><kbd>d</kbd> <kbd>l</kbd></span><span>Describe pod / pod logs</span></div>
+      <div class="key-row"><span><kbd>p</kbd></span><span>Pause display — collection continues</span></div>
+      <div class="key-row"><span><kbd>?</kbd></span><span>Help</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ----------------------------------------------------------- status -->
+<section id="status" class="section views-section">
+  <div class="shell">
+    <div class="section-intro">
+      <p class="eyebrow">Honest status</p>
+      <h2>What is done, and what is not.</h2>
+      <p>gputop is pre-1.0. Rather than flatten that into marketing, here is the
+         real state of each area — the same table the README carries.</p>
+    </div>
+    <div style="overflow-x:auto">
+      <table class="status-table">
+        <thead>
+          <tr><th scope="col">Area</th><th scope="col">Status</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>NVIDIA via NVML — utilization, memory, power, clocks, throttle reasons, PCIe, NVLink, MIG, ECC, Xid events, processes</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td>Interactive TUI — 17 tabs, sorting, search, filters, detail views, resizing from 80×24</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td>History — configurable retention, on-disk persistence, charts, time scrubbing</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td>Custom themes, key bindings and mouse navigation</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td>Host CPU, RAM, disks, network and InfiniBand counters</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td><code>--once</code> and <code>--json</code> output with a versioned schema</td><td><span class="badge done">✅ shipped</span></td></tr>
+          <tr><td>Apple silicon via IOKit/IOReport/SMC — no root, no cgo</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>Health score (0–100) with itemized reasons</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>Derived metrics — idle allocation, stragglers, efficiency</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>Process → container → pod → workload correlation</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>Service mode — HTTP API, Prometheus, TLS, token auth, mTLS</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>Remote TUI (<code>--remote</code>) and remote node summaries</td><td><span class="badge exp">🧪 experimental</span></td></tr>
+          <tr><td>NVIDIA DCGM — per-MIG utilization, profiling metrics</td><td><span class="badge plan">🗺 planned</span></td></tr>
+          <tr><td>AMD and Intel providers</td><td><span class="badge plan">🗺 planned</span></td></tr>
+          <tr><td>Kubelet pod-resources API</td><td><span class="badge plan">🗺 planned</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- install -->
+<section id="install" class="section shell">
+  <div class="section-intro">
+    <p class="eyebrow">Install</p>
+    <h2>Running in about ten seconds.</h2>
+    <p>No agent, no daemon, no database. One binary you can delete afterwards.</p>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Installation method">
+    <button class="tab" role="tab" id="tab-binary" aria-controls="panel-binary" aria-selected="true">Binary</button>
+    <button class="tab" role="tab" id="tab-go" aria-controls="panel-go" aria-selected="false">Go</button>
+    <button class="tab" role="tab" id="tab-source" aria-controls="panel-source" aria-selected="false">Source</button>
+  </div>
+
+  <div class="codeblock" role="tabpanel" id="panel-binary" aria-labelledby="tab-binary">
+    <div class="code-head"><span>linux · amd64</span>
+      <button type="button" data-copy="curl -fLo gputop https://github.com/riteshsonawane1372/gputop/releases/latest/download/gputop-linux-amd64&#10;chmod +x gputop &amp;&amp; sudo install gputop /usr/local/bin/&#10;gputop --demo">Copy</button>
+    </div>
+<pre><code><span class="prompt">$</span> curl -fLo gputop https://github.com/riteshsonawane1372/gputop/releases/latest/download/gputop-linux-amd64
 <span class="prompt">$</span> chmod +x gputop &amp;&amp; sudo install gputop /usr/local/bin/
-<span class="prompt">$</span> gputop --demo</code></pre></div><p class="install-note">Have Go 1.25+? Run <code>go install github.com/riteshsonawane1372/gputop/cmd/gputop@latest</code>.</p></section>
+<span class="prompt">$</span> gputop --demo   <span class="comment"># try it with no GPU at all</span></code></pre>
+  </div>
 
-    <section class="command-section"><div class="shell"><p class="eyebrow"><span></span>One binary, many ways to use it</p><div class="command-grid"><div><code>gputop</code><span>Interactive GPU terminal</span></div><div><code>gputop --demo</code><span>Explore simulated GPUs</span></div><div><code>gputop --once --json</code><span>One machine-readable snapshot</span></div><div><code>gputop --service</code><span>HTTP API + Prometheus agent</span></div><div><code>gputop --remote gpu-node-01</code><span>Connect to a remote agent</span></div><div><code>gputop --print-config</code><span>View effective configuration</span></div></div></div></section>
+  <div class="codeblock" role="tabpanel" id="panel-go" aria-labelledby="tab-go" hidden>
+    <div class="code-head"><span>go 1.25+</span>
+      <button type="button" data-copy="go install github.com/riteshsonawane1372/gputop/cmd/gputop@latest">Copy</button>
+    </div>
+<pre><code><span class="prompt">$</span> go install github.com/riteshsonawane1372/gputop/cmd/gputop@latest</code></pre>
+  </div>
 
-    <section id="docs" class="section shell docs"><div class="section-intro"><p class="eyebrow"><span></span>Documentation</p><h2>Everything, explained.</h2><p>Guides for running gputop locally, in production, and across your GPU fleet.</p></div><div class="docs-grid"><a href="configuration.html"><b>Configuration</b><span>Set refresh tiers, retention, themes, keys and server options.</span><i>→</i></a><a href="metrics.html"><b>Metrics reference</b><span>Understand each collected and derived metric.</span><i>→</i></a><a href="health-score.html"><b>Health score</b><span>Learn how gputop identifies risk and explains it.</span><i>→</i></a><a href="kubernetes.html"><b>Kubernetes</b><span>Deploy as a DaemonSet and correlate workloads.</span><i>→</i></a><a href="remote.html"><b>Remote monitoring</b><span>Connect agents securely across nodes.</span><i>→</i></a><a href="themes.html"><b>Themes</b><span>Make the terminal look exactly the way you work.</span><i>→</i></a></div></section>
+  <div class="codeblock" role="tabpanel" id="panel-source" aria-labelledby="tab-source" hidden>
+    <div class="code-head"><span>from source</span>
+      <button type="button" data-copy="git clone https://github.com/riteshsonawane1372/gputop&#10;cd gputop &amp;&amp; make build&#10;./bin/gputop --demo">Copy</button>
+    </div>
+<pre><code><span class="prompt">$</span> git clone https://github.com/riteshsonawane1372/gputop
+<span class="prompt">$</span> cd gputop &amp;&amp; make build
+<span class="prompt">$</span> ./bin/gputop --demo</code></pre>
+  </div>
 
-    <section class="cta shell"><div><p class="eyebrow"><span></span>Open source</p><h2>Bring clarity to your compute.</h2></div><a class="button primary" href="https://github.com/riteshsonawane1372/gputop">Star gputop on GitHub <span>↗</span></a></section>
-  </main>
-  <footer class="shell"><a class="brand" href="#top"><span class="brand-mark">◆</span>gputop</a><span>GPU infrastructure, in focus.</span><div><a href="https://github.com/riteshsonawane1372/gputop">GitHub</a><a href="https://github.com/riteshsonawane1372/gputop/blob/main/LICENSE">MIT License</a></div></footer>
-  <script src="assets/site.js"></script>
+  <p class="note">
+    Also available: <code>gputop --once --json</code> for one machine-readable
+    snapshot, <code>gputop --service</code> for the HTTP API and Prometheus
+    endpoint, and <code>gputop --remote gpu-node-01</code> to attach to a remote
+    agent.
+  </p>
+</section>
+
+<!-- ------------------------------------------------------------- docs -->
+<section id="docs" class="section shell">
+  <div class="section-intro">
+    <p class="eyebrow">Documentation</p>
+    <h2>All ten guides.</h2>
+    <p>Everything from first run to running it across a fleet.</p>
+  </div>
+  <div class="docs-grid">
+    <a class="doc-card" href="configuration.html"><b>Configuration</b><span>Refresh tiers, retention, themes, key bindings, server options.</span></a>
+    <a class="doc-card" href="metrics.html"><b>Metrics &amp; provenance</b><span>Every metric, and exactly where each value comes from.</span></a>
+    <a class="doc-card" href="derived-metrics.html"><b>Derived metrics</b><span>Formulas, inputs, assumptions and limitations.</span></a>
+    <a class="doc-card" href="health-score.html"><b>Health score</b><span>How the 0–100 triage heuristic works — and what it is not.</span></a>
+    <a class="doc-card" href="kubernetes.html"><b>Kubernetes</b><span>DaemonSet deployment and workload correlation.</span></a>
+    <a class="doc-card" href="remote.html"><b>Service &amp; remote</b><span>HTTP API, Prometheus, TLS and remote monitoring.</span></a>
+    <a class="doc-card" href="json-schema.html"><b>JSON output</b><span>The versioned snapshot schema for scripts and pipelines.</span></a>
+    <a class="doc-card" href="architecture.html"><b>Architecture</b><span>The one-way pipeline from provider to UI.</span></a>
+    <a class="doc-card" href="performance.html"><b>Performance</b><span>Why a monitor must not become the problem.</span></a>
+    <a class="doc-card" href="themes.html"><b>Themes</b><span>Semantic colour roles, and building your own.</span></a>
+  </div>
+</section>
+
+<!-- -------------------------------------------------------------- cta -->
+<section class="shell">
+  <div class="cta">
+    <div>
+      <p class="eyebrow">Open source · Apache-2.0</p>
+      <h2>Bring clarity to your compute.</h2>
+    </div>
+    <a class="button primary" href="https://github.com/riteshsonawane1372/gputop">Star on GitHub <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="shell">
+    <a class="brand" href="#top"><b>◆</b>gputop</a>
+    <span>GPU infrastructure, in focus.</span>
+    <nav aria-label="Footer">
+      <a href="https://github.com/riteshsonawane1372/gputop">GitHub</a>
+      <a href="https://github.com/riteshsonawane1372/gputop/blob/main/LICENSE">Apache-2.0</a>
+      <a href="https://github.com/riteshsonawane1372/gputop/blob/main/CONTRIBUTING.md">Contributing</a>
+      <a href="https://github.com/riteshsonawane1372/gputop/releases">Releases</a>
+    </nav>
+  </div>
+  <div class="shell">
+    <p class="trademark">
+      NVIDIA, NVML, CUDA and NVLink are trademarks of NVIDIA Corporation.
+      gputop is not affiliated with NVIDIA.
+    </p>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
 </body>
 </html>

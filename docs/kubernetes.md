@@ -1,3 +1,7 @@
+---
+title: Kubernetes
+---
+
 # Kubernetes
 
 > 🧪 Experimental. Kubernetes support is optional; gputop works on plain Linux.

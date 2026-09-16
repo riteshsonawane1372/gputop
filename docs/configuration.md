@@ -1,3 +1,7 @@
+---
+title: Configuration
+---
+
 # Configuration
 
 gputop reads `$XDG_CONFIG_HOME/gputop/config.yaml` (default

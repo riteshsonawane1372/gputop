@@ -1,3 +1,7 @@
+---
+title: Derived metrics
+---
+
 # Derived metrics
 
 Derived metrics are **computed by gputop** from vendor readings. They are

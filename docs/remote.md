@@ -1,3 +1,7 @@
+---
+title: Service mode and remote monitoring
+---
+
 # Service mode and remote monitoring
 
 > 🧪 Experimental: the API is versioned (`/api/v1`) but may change before 1.0.

@@ -1,3 +1,7 @@
+---
+title: Themes
+---
+
 # Themes
 
 gputop never uses literal colors in UI code. Components ask the theme for

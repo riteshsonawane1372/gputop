@@ -1,3 +1,7 @@
+---
+title: Architecture
+---
+
 # Architecture
 
 gputop is organized as a one-way pipeline:

@@ -1,3 +1,7 @@
+---
+title: JSON output
+---
+
 # JSON output
 
 ```bash
