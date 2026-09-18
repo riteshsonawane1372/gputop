@@ -17,6 +17,7 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
 	"github.com/riteshsonawane1372/gputop/internal/history"
 	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 )
 
 // TestDumpFrames writes rendered frames for visual review when
@@ -33,10 +34,12 @@ func TestDumpFrames(t *testing.T) {
 		w, h = 160, 48
 	}
 	store, _, _ := history.Open(history.Options{Retention: 30 * time.Minute, Resolution: 100 * time.Millisecond})
+	sp := sim.New(sim.Options{GPUs: 8, Speed: 60})
 	e := collector.New(collector.Options{
-		Providers: []gpu.Provider{sim.New(sim.Options{GPUs: 8, Speed: 60})},
+		Providers: []gpu.Provider{sp},
 		Intervals: collector.Intervals{Fast: 25 * time.Millisecond, Normal: 50 * time.Millisecond, Slow: 100 * time.Millisecond, Inventory: time.Minute, Timeout: time.Second},
 		Host:      host.NewCollector(), History: store, Demo: true,
+		Inference: inference.NewScraper(inference.Options{Fetch: sp.InferenceMetrics}), Discover: true,
 	})
 	src := &staticSource{store: store}
 	sub, cancel := e.Subscribe()

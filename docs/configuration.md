@@ -110,6 +110,17 @@ shows the problem in the footer.
 | `pod_logs_dir` | `/var/log/pods` | Scanned to map pod UIDs to names on a node. |
 | `api` | `auto` | Query the API server with the in-cluster service account (`auto` = when running in a pod). |
 
+## `inference`
+
+Serving metrics from LLM inference servers; see [inference.md](inference.md).
+
+| Key | Default | Description |
+|---|---|---|
+| `enabled` | `true` | Scrape inference servers. |
+| `discover` | `true` | Scrape vLLM, SGLang, TGI and llama.cpp servers recognized among GPU processes. |
+| `window` | `1m` | Span that rates and latency percentiles cover (5s to 1h). |
+| `endpoints` | `[]` | Extra servers: a list of `name` and `url` (the Prometheus metrics URL, `http://` or `https://`). |
+
 ## `remote`
 
 `remote.nodes` is a list of agents:

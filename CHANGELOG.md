@@ -6,6 +6,27 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Inference serving metrics: gputop scrapes vLLM, SGLang, Text Generation
+  Inference and llama.cpp servers (discovered from GPU processes or listed in
+  `inference.endpoints`) and reports time to first token, inter-token latency,
+  end-to-end and queue latency (mean, p50, p90, p99), request and token
+  throughput, running/waiting requests, KV-cache usage, prefix-cache hit rate
+  and preemptions over a sliding window. Shown in a new Inference tab, a
+  *Serving* line on the Overview, a *KV cache full* alert, the snapshot JSON
+  (`inference`) and Prometheus (`gputop_inference_*`). `--demo` simulates a
+  vLLM server.
+
+### Changed
+
+- The README is shorter; details moved to `docs/`.
+
+### Fixed
+
+- Dashboard scrolling lagged because every frame took ~40 ms to draw; chart
+  rendering now styles runs of cells instead of single cells (~8× faster).
+
 ## [0.2.0] - 2026-09-15
 
 ### Added

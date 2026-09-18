@@ -411,7 +411,8 @@ func collectorEvents(prev, cur *model.Snapshot, now time.Time) []model.Event {
 }
 
 // Alerts computes the currently active alerts from a snapshot: warning and
-// critical health reasons plus failing collectors. Since is when the
+// critical health reasons, failing collectors and inference servers whose
+// KV cache is full while requests wait. Since is when the
 // condition was first observed by this detector.
 func (d *Detector) Alerts(s *model.Snapshot) []model.Alert {
 	seen := map[string]bool{}
@@ -444,6 +445,18 @@ func (d *Detector) Alerts(s *model.Snapshot) []model.Alert {
 			add(model.Alert{Key: "collector/" + c.Name, Severity: model.SevWarning, DeviceIndex: -1,
 				Title: "Collector " + c.Name + " failing", Detail: c.LastError})
 		}
+	}
+	for _, sv := range s.Inference {
+		mt := sv.Metrics
+		if !sv.Up || !mt.KVCacheUsage.OK || mt.KVCacheUsage.V < 0.95 || !mt.Waiting.OK || mt.Waiting.V <= 0 {
+			continue
+		}
+		detail := fmt.Sprintf("%.0f%% used, %.0f waiting", mt.KVCacheUsage.V*100, mt.Waiting.V)
+		if mt.PreemptionsPerSec.OK && mt.PreemptionsPerSec.V > 0 {
+			detail += fmt.Sprintf(", %.1f preemptions/s", mt.PreemptionsPerSec.V)
+		}
+		add(model.Alert{Key: "inference/" + sv.URL + "/kv", Severity: model.SevWarning, DeviceIndex: -1,
+			Title: "Inference " + sv.Name + " KV cache full", Detail: detail})
 	}
 	for k := range d.alertSince {
 		if !seen[k] {

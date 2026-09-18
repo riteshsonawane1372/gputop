@@ -318,17 +318,39 @@ func MultiChart(th *theme.Theme, series []Series, w, h int, minV, maxV float64) 
 			prev = y
 		}
 	}
+	// Style each run of cells sharing an owner once: Render per cell
+	// dominated the cost of drawing a dashboard.
 	out := make(Block, h)
-	var sb strings.Builder
+	var sb, run strings.Builder
 	for r := 0; r < h; r++ {
 		sb.Reset()
-		for c := 0; c < w; c++ {
+		for c := 0; c < w; {
 			i := r*w + c
+			o := owner[i]
 			if cells[i] == 0 {
-				sb.WriteString(th.Base.Render(" "))
-				continue
+				o = -1
 			}
-			sb.WriteString(series[owner[i]].Style.Render(string(0x2800 + cells[i])))
+			run.Reset()
+			for ; c < w; c++ {
+				j := r*w + c
+				oj := owner[j]
+				if cells[j] == 0 {
+					oj = -1
+				}
+				if oj != o {
+					break
+				}
+				if o < 0 {
+					run.WriteByte(' ')
+				} else {
+					run.WriteRune(0x2800 + cells[j])
+				}
+			}
+			st := th.Base
+			if o >= 0 {
+				st = series[o].Style
+			}
+			sb.WriteString(st.Render(run.String()))
 		}
 		out[r] = sb.String()
 	}

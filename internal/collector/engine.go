@@ -36,6 +36,7 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/health"
 	"github.com/riteshsonawane1372/gputop/internal/history"
 	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/kube"
 	"github.com/riteshsonawane1372/gputop/internal/metric"
 	"github.com/riteshsonawane1372/gputop/internal/model"
@@ -62,10 +63,16 @@ type Options struct {
 	Kube    *kube.Correlator   // nil disables pod resolution
 	KubeEnv kube.Environment
 	History *history.Store // nil disables history
-	Events  *events.Log
-	Demo    bool
-	Log     *slog.Logger
-	Now     func() time.Time
+	// Inference scrapes LLM inference servers (nil disables): the
+	// configured Endpoints plus, with Discover, servers recognized among
+	// GPU processes.
+	Inference *inference.Scraper
+	Endpoints []inference.Target
+	Discover  bool
+	Events    *events.Log
+	Demo      bool
+	Log       *slog.Logger
+	Now       func() time.Time
 	// Workers bounds concurrent per-device provider calls (default 4).
 	Workers int
 }
@@ -219,6 +226,7 @@ func (e *Engine) Run(ctx context.Context) error {
 	// Inventory first so the other tiers have devices to work with.
 	<-e.start(ctx, e.collectors["inventory"])
 	e.runNow(ctx, "health", "links", "processes", "partitions", "network", "disks", "filesystems", "kubernetes")
+	e.runNow(ctx, "inference") // discovery needs the processes collected above
 
 	var wg sync.WaitGroup
 	spawn := func(f func()) {
@@ -226,7 +234,7 @@ func (e *Engine) Run(ctx context.Context) error {
 		go func() { defer wg.Done(); f() }()
 	}
 	spawn(func() { e.tierLoop(ctx, iv.Inventory, "inventory") })
-	spawn(func() { e.tierLoop(ctx, iv.Normal, "health", "links", "processes", "network", "disks") })
+	spawn(func() { e.tierLoop(ctx, iv.Normal, "health", "links", "processes", "network", "disks", "inference") })
 	spawn(func() { e.tierLoop(ctx, iv.Slow, "partitions", "filesystems", "kubernetes") })
 	spawn(func() { e.watchEvents(ctx) })
 
@@ -241,7 +249,7 @@ func (e *Engine) Run(ctx context.Context) error {
 		case <-fast.C:
 			e.fastPass(ctx)
 		case <-e.refresh:
-			e.runNow(ctx, "health", "links", "processes", "network", "disks")
+			e.runNow(ctx, "health", "links", "processes", "network", "disks", "inference")
 			e.fastPass(ctx)
 			fast.Reset(iv.Fast)
 		}
@@ -253,13 +261,14 @@ func (e *Engine) Run(ctx context.Context) error {
 func (e *Engine) Once(ctx context.Context, settle time.Duration) *model.Snapshot {
 	<-e.start(ctx, e.collectors["inventory"])
 	e.runNow(ctx, "health", "links", "processes", "partitions", "network", "disks", "filesystems", "kubernetes")
+	e.runNow(ctx, "inference") // discovery needs the processes collected above
 	e.fastPass(ctx)
 	if settle > 0 {
 		select {
 		case <-ctx.Done():
 		case <-time.After(settle):
 		}
-		e.runNow(ctx, "links", "network", "disks")
+		e.runNow(ctx, "links", "network", "disks", "inference")
 		e.fastPass(ctx)
 	}
 	return e.Latest()
@@ -487,6 +496,10 @@ func (e *Engine) publish() {
 		s.Kubernetes.LastRefresh = now
 	default:
 		s.Kubernetes = kube.Status{Environment: e.o.KubeEnv}
+	}
+
+	if e.o.Inference != nil {
+		s.Inference = e.o.Inference.Servers()
 	}
 
 	e.tracker.Apply(s, xids)

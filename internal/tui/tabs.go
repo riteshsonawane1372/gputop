@@ -37,6 +37,7 @@ func allTabs() []*tabDef {
 		{id: "nodes", title: "Nodes", view: viewNodes, keys: keysNodes},
 		{id: "kubernetes", title: "Kubernetes", visible: kubeVisible, view: viewKube, keys: keysKube, hints: hintsKube, searchable: true},
 		{id: "workloads", title: "Workloads", visible: func(m *Model) bool { return len(m.view().Processes) > 0 }, view: viewWorkloads, keys: keysWorkloads, searchable: true},
+		{id: "inference", title: "Inference", visible: inferenceVisible, view: viewInference, keys: keysInference, hints: hintsInference, searchable: true},
 		{id: "network", title: "Network", visible: func(m *Model) bool { return m.view().Host != nil }, view: viewNetwork, keys: keysNetwork, searchable: true},
 		{id: "dashboard", title: "Dashboard", visible: hasGPUs, view: viewDashboard, keys: keysDashboard, hints: hintsDashboard},
 		{id: "history", title: "History", view: viewHistory, keys: keysHistory, hints: hintsHistory},

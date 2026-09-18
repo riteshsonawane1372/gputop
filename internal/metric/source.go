@@ -16,7 +16,7 @@ const (
 	SourceHost        Source = "host"        // operating system counters
 	SourceProcfs      Source = "procfs"      // per-process information from the OS
 	SourceKubernetes  Source = "kubernetes"  // Kubernetes API / kubelet artifacts
-	SourceApplication Source = "application" // application-reported telemetry (planned)
+	SourceApplication Source = "application" // application-reported telemetry (inference servers)
 	SourceDerived     Source = "derived"     // computed by gputop from other values
 	SourceSimulated   Source = "simulated"   // --demo mode; never real hardware
 )

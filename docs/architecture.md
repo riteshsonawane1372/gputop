@@ -106,7 +106,7 @@ and registering it in `internal/app`. No other package changes.
 | Tier | Default | Collectors |
 |---|---|---|
 | fast | 1s | `gpu` (samples), `host` (CPU, memory) |
-| normal | 3s | `processes`, `health`, `links`, `network`, `disks` |
+| normal | 3s | `processes`, `health`, `links`, `network`, `disks`, `inference` |
 | slow | 30s | `partitions` (MIG), `filesystems`, `kubernetes` |
 | inventory | 5m | `inventory` (discovery, static info, topology) |
 | event | — | provider event sources |

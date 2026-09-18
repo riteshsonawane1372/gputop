@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/metric"
 	"github.com/riteshsonawane1372/gputop/internal/model"
 )
@@ -199,6 +200,39 @@ func WritePrometheus(out io.Writer, s *model.Snapshot, version string) error {
 		}
 		p.gauge("gputop_gpu_idle_allocated", "1 when the GPU has processes but stayed idle for gpu.idle_after (derived).", l, b2f(g.Derived.IdleAllocated))
 		p.gauge("gputop_gpu_utilization_outlier", "1 when utilization is a low outlier within its workload cohort (derived).", l, b2f(g.Derived.Outlier))
+	}
+
+	for _, sv := range s.Inference {
+		l := []string{"server", sv.Name, "engine", sv.Engine}
+		p.gauge("gputop_inference_up", "1 if the inference server's metrics endpoint was scraped successfully.", l, b2f(sv.Up))
+		if !sv.Up {
+			continue
+		}
+		mt := sv.Metrics
+		optGauge(p, "gputop_inference_requests_running", "Requests being processed.", l, mt.Running, 1)
+		optGauge(p, "gputop_inference_requests_waiting", "Requests queued for scheduling.", l, mt.Waiting, 1)
+		optGauge(p, "gputop_inference_kv_cache_usage_ratio", "Fraction of KV-cache blocks in use.", l, mt.KVCacheUsage, 1)
+		optGauge(p, "gputop_inference_prefix_cache_hit_ratio", "Fraction of prompt tokens served from the prefix cache over the window.", l, mt.PrefixCacheHitRate, 1)
+		optGauge(p, "gputop_inference_requests_per_second", "Completed requests per second over the window.", l, mt.RequestsPerSec, 1)
+		optGauge(p, "gputop_inference_prompt_tokens_per_second", "Prompt tokens processed per second over the window.", l, mt.PromptTokensPerSec, 1)
+		optGauge(p, "gputop_inference_generation_tokens_per_second", "Tokens generated per second over the window.", l, mt.GenTokensPerSec, 1)
+		for _, lat := range []struct {
+			name, help string
+			v          inference.Latency
+		}{
+			{"gputop_inference_ttft_seconds", "Time to first token over the window.", mt.TTFT},
+			{"gputop_inference_itl_seconds", "Inter-token latency over the window.", mt.ITL},
+			{"gputop_inference_e2e_seconds", "End-to-end request latency over the window.", mt.E2E},
+			{"gputop_inference_queue_seconds", "Time requests waited before scheduling over the window.", mt.Queue},
+		} {
+			for _, q := range []struct {
+				label string
+				v     metric.Opt[float64]
+			}{{"0.5", lat.v.P50}, {"0.9", lat.v.P90}, {"0.99", lat.v.P99}} {
+				optGauge(p, lat.name, lat.help+" Quantiles are estimated from the server's histogram buckets.",
+					append(append([]string(nil), l...), "quantile", q.label), q.v, 1)
+			}
+		}
 	}
 
 	f := s.Fleet

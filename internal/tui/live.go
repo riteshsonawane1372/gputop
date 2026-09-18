@@ -98,6 +98,16 @@ func (l *live) observe(s *model.Snapshot) {
 		l.get("dec/" + id).push(val(avail && sm.DecoderPercent.OK, sm.DecoderPercent.V))
 		l.get("fan/" + id).push(val(avail && sm.FanPct.OK, sm.FanPct.V))
 	}
+	for _, sv := range s.Inference {
+		key := "inf/" + sv.URL + "/"
+		mt := sv.Metrics
+		l.get(key + "ttft50").push(val(sv.Up && mt.TTFT.P50.OK, mt.TTFT.P50.V))
+		l.get(key + "ttft99").push(val(sv.Up && mt.TTFT.P99.OK, mt.TTFT.P99.V))
+		l.get(key + "gen").push(val(sv.Up && mt.GenTokensPerSec.OK, mt.GenTokensPerSec.V))
+		l.get(key + "kv").push(val(sv.Up && mt.KVCacheUsage.OK, mt.KVCacheUsage.V*100))
+		l.get(key + "run").push(val(sv.Up && mt.Running.OK, mt.Running.V))
+		l.get(key + "wait").push(val(sv.Up && mt.Waiting.OK, mt.Waiting.V))
+	}
 	f := s.Fleet
 	l.get("fleet/util").push(val(f.UtilAvg.OK, f.UtilAvg.V))
 	l.get("fleet/power").push(val(f.PowerW.OK, f.PowerW.V))

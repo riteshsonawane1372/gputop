@@ -29,6 +29,7 @@ type Config struct {
 	Keys       map[string]StringList `yaml:"keys,omitempty"`
 	GPU        GPU                   `yaml:"gpu"`
 	Kubernetes Kubernetes            `yaml:"kubernetes"`
+	Inference  Inference             `yaml:"inference"`
 	Remote     Remote                `yaml:"remote"`
 	Server     Server                `yaml:"server"`
 	Prometheus Prometheus            `yaml:"prometheus"`
@@ -101,6 +102,24 @@ type Kubernetes struct {
 	PodLogsDir string `yaml:"pod_logs_dir"`
 	// API enables querying the API server with the in-cluster service account.
 	API AutoBool `yaml:"api"`
+}
+
+// Inference configures scraping of LLM inference servers (vLLM, SGLang,
+// TGI, llama.cpp) for serving metrics such as time to first token.
+type Inference struct {
+	Enabled bool `yaml:"enabled"`
+	// Discover scrapes inference servers recognized among GPU processes.
+	Discover bool `yaml:"discover"`
+	// Window is the span rates and latency percentiles are computed over.
+	Window    Duration            `yaml:"window"`
+	Endpoints []InferenceEndpoint `yaml:"endpoints,omitempty"`
+}
+
+// InferenceEndpoint is an explicitly configured metrics endpoint.
+type InferenceEndpoint struct {
+	Name string `yaml:"name"`
+	// URL of the server's Prometheus metrics, e.g. http://10.0.0.5:8000/metrics.
+	URL string `yaml:"url"`
 }
 
 // Remote lists remote gputop agents.
@@ -186,6 +205,7 @@ func Default() Config {
 		Theme:      Theme{Name: "green"},
 		GPU:        GPU{Providers: StringList{"auto"}, IdleThreshold: 5, IdleAfter: Duration(5 * time.Minute), OutlierMinDelta: 20},
 		Kubernetes: Kubernetes{Enabled: Auto, PodLogsDir: "/var/log/pods", API: Auto},
+		Inference:  Inference{Enabled: true, Discover: true, Window: Duration(time.Minute)},
 		Server:     Server{Listen: fmt.Sprintf("127.0.0.1:%d", DefaultPort), ExposeProcesses: true},
 		Prometheus: Prometheus{Enabled: true, Path: "/metrics"},
 		Logging:    Logging{Level: "warn"},
@@ -285,6 +305,23 @@ func (c *Config) Validate() error {
 		case "auto", "nvidia", "apple":
 		default:
 			bad("gpu.providers: unknown provider %q (available: auto, nvidia, apple)", p)
+		}
+	}
+
+	if c.Inference.Enabled && (c.Inference.Window.D() < 5*time.Second || c.Inference.Window.D() > time.Hour) {
+		bad("inference.window must be between 5s and 1h (got %s)", c.Inference.Window.D())
+	}
+	endpointNames := map[string]bool{}
+	for i, ep := range c.Inference.Endpoints {
+		where := fmt.Sprintf("inference.endpoints[%d]", i)
+		if ep.Name == "" {
+			bad("%s.name is required", where)
+		} else if endpointNames[ep.Name] {
+			bad("%s.name %q is duplicated", where, ep.Name)
+		}
+		endpointNames[ep.Name] = true
+		if u, err := url.Parse(ep.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			bad("%s.url %q must be an http:// or https:// URL", where, ep.URL)
 		}
 	}
 

@@ -41,6 +41,14 @@ kubernetes:
   pod_logs_dir: /var/log/pods
   api: auto             # in-cluster service account when running in a pod
 
+inference:            # serving metrics (TTFT, ITL, tokens/s, KV cache) from LLM servers
+  enabled: true
+  discover: true        # scrape vLLM/SGLang/TGI/llama.cpp found among GPU processes
+  window: 1m            # rates and latency percentiles cover this window
+  endpoints: []
+  # - name: chat-api
+  #   url: http://10.0.0.5:8000/metrics
+
 remote:
   nodes: []
   # - name: gpu-node-01

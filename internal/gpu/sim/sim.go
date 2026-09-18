@@ -45,6 +45,7 @@ type Provider struct {
 	nvlTx   []float64
 	eccCorr []uint64
 	pcieTx  []float64
+	serving *simServer
 }
 
 type role int

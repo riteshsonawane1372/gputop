@@ -173,6 +173,9 @@ func (m *Model) fleetLines(s *model.Snapshot, w int) []string {
 	if len(extra) > 0 {
 		lines = append(lines, m.kv("Capacity", strings.Join(extra, "  "), lw))
 	}
+	if len(s.Inference) > 0 {
+		lines = append(lines, m.kv("Serving", m.servingLine(s.Inference), lw))
+	}
 	if hs := s.Host; hs != nil {
 		txt := th.Dim.Render("CPU ") + m.naOr(optPct(hs.CPU.UtilPercent), th.Gradient(hs.CPU.UtilPercent.V/100))
 		if f := hs.Memory.UsedFraction(); f.OK {

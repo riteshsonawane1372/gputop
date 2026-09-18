@@ -18,6 +18,7 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
 	"github.com/riteshsonawane1372/gputop/internal/history"
 	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/keymap"
 	"github.com/riteshsonawane1372/gputop/internal/model"
 	"github.com/riteshsonawane1372/gputop/internal/theme"
@@ -53,10 +54,12 @@ func simSource(t testing.TB, gpus int) *staticSource {
 	if err != nil {
 		t.Fatal(err)
 	}
+	sp := sim.New(sim.Options{GPUs: gpus})
 	e := collector.New(collector.Options{
-		Providers: []gpu.Provider{sim.New(sim.Options{GPUs: gpus})},
+		Providers: []gpu.Provider{sp},
 		Intervals: collector.Intervals{Fast: 30 * time.Millisecond, Normal: 60 * time.Millisecond, Slow: 120 * time.Millisecond, Inventory: time.Second, Timeout: time.Second},
 		Host:      host.NewCollector(), History: store, Demo: true,
+		Inference: inference.NewScraper(inference.Options{Fetch: sp.InferenceMetrics}), Discover: true,
 	})
 	ctx, cancel := context.WithTimeout(context.Background(), 700*time.Millisecond)
 	defer cancel()

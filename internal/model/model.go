@@ -15,6 +15,7 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/gpu"
 	"github.com/riteshsonawane1372/gputop/internal/health"
 	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/kube"
 	"github.com/riteshsonawane1372/gputop/internal/metric"
 )
@@ -30,19 +31,20 @@ type Snapshot struct {
 	// Ready is false until the first device inventory completed.
 	Ready bool `json:"ready"`
 
-	Node       Node              `json:"node"`
-	Providers  []ProviderStatus  `json:"providers"`
-	GPUs       []GPU             `json:"gpus"`
-	Processes  []Process         `json:"processes"`
-	Topology   []TopologyEdge    `json:"topology,omitempty"`
-	Host       *host.Snapshot    `json:"host,omitempty"`
-	Kubernetes kube.Status       `json:"kubernetes"`
-	Fleet      Fleet             `json:"fleet"`
-	Events     []Event           `json:"events"`
-	Alerts     []Alert           `json:"alerts"`
-	Collectors []CollectorStatus `json:"collectors"`
-	History    HistoryStatus     `json:"history"`
-	Self       SelfStats         `json:"self"`
+	Node       Node               `json:"node"`
+	Providers  []ProviderStatus   `json:"providers"`
+	GPUs       []GPU              `json:"gpus"`
+	Processes  []Process          `json:"processes"`
+	Topology   []TopologyEdge     `json:"topology,omitempty"`
+	Host       *host.Snapshot     `json:"host,omitempty"`
+	Kubernetes kube.Status        `json:"kubernetes"`
+	Inference  []inference.Server `json:"inference,omitempty"`
+	Fleet      Fleet              `json:"fleet"`
+	Events     []Event            `json:"events"`
+	Alerts     []Alert            `json:"alerts"`
+	Collectors []CollectorStatus  `json:"collectors"`
+	History    HistoryStatus      `json:"history"`
+	Self       SelfStats          `json:"self"`
 }
 
 // Node identifies the monitored machine.

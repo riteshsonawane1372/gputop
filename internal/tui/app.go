@@ -82,6 +82,7 @@ type Model struct {
 	nodesSel int
 	netSel   int
 	workSel  int
+	infSel   int
 	kube     kubeState
 	dash     dashState
 }

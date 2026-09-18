@@ -22,6 +22,7 @@ import (
 	"github.com/riteshsonawane1372/gputop/internal/gpu/sim"
 	"github.com/riteshsonawane1372/gputop/internal/history"
 	"github.com/riteshsonawane1372/gputop/internal/host"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/kube"
 	"github.com/riteshsonawane1372/gputop/internal/paths"
 	"github.com/riteshsonawane1372/gputop/internal/procinfo"
@@ -133,6 +134,24 @@ func Build(o Options) (*Runtime, error) {
 	}
 
 	provs := Providers(cfg, o.Demo, o.DemoGPUs)
+	var (
+		scraper   *inference.Scraper
+		endpoints []inference.Target
+	)
+	if cfg.Inference.Enabled {
+		io := inference.Options{Window: cfg.Inference.Window.D()}
+		if o.Demo {
+			// Demo mode never touches the network: the simulated servers answer.
+			if sp, ok := provs[0].(*sim.Provider); ok {
+				io.Fetch = sp.InferenceMetrics
+			}
+		} else {
+			for _, ep := range cfg.Inference.Endpoints {
+				endpoints = append(endpoints, inference.Target{Name: ep.Name, URL: ep.URL, Origin: inference.OriginConfig})
+			}
+		}
+		scraper = inference.NewScraper(io)
+	}
 	eng := collector.New(collector.Options{
 		Providers: provs,
 		Intervals: collector.Intervals{
@@ -145,6 +164,7 @@ func Build(o Options) (*Runtime, error) {
 		},
 		Host: host.NewCollector(), Procs: procinfo.NewResolver(), Kube: corr, KubeEnv: env,
 		History: rt.History, Events: evlog, Demo: o.Demo, Log: log,
+		Inference: scraper, Endpoints: endpoints, Discover: cfg.Inference.Discover || o.Demo,
 	})
 	rt.Engine = eng
 	rt.Close = func() {

@@ -35,6 +35,7 @@ import (
 
 	"github.com/riteshsonawane1372/gputop/internal/config"
 	"github.com/riteshsonawane1372/gputop/internal/history"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/model"
 	"github.com/riteshsonawane1372/gputop/internal/paths"
 )
@@ -241,6 +242,12 @@ func Redact(s *model.Snapshot, exposeProcesses bool) *model.Snapshot {
 			p.Name, p.User = "", ""
 		}
 		c.Processes[i] = p
+	}
+	if !exposeProcesses && len(s.Inference) > 0 {
+		c.Inference = append([]inference.Server(nil), s.Inference...)
+		for i := range c.Inference {
+			c.Inference[i].PID = 0
+		}
 	}
 	return &c
 }

@@ -42,6 +42,7 @@ process command lines removed).
 | `topology` | array | Pairs `a`, `b` (GPU UUIDs), `pcie` level (`internal`, `pix`, `pxb`, `phb`, `node`, `sys`, `unknown`), `nvlinks` count |
 | `host` | object | `info`, `cpu`, `memory`, `filesystems`, `block_devices`, `network` |
 | `kubernetes` | object | Detected `environment`, API status, pods known, and `pods`: GPU pods with `uid`, `name`, `namespace`, `node`, `pod_ip`, `phase`, `qos`, `created`, `labels`, `workload_kind`/`workload_name`, `gpu_requests`, `containers` (image, state, ready, restarts, last state, requests, limits), `conditions` and `source` (`api` or `node`) |
+| `inference` | array | Inference servers (omitted when there are none): `name`, `url`, `engine`, `models`, `origin` (`config`/`discovered`), `pid`, `gpus`, `pod`, `up`, `error`, `last_scrape`, and `metrics` (see [inference.md](inference.md)): `window_ns`, `requests_running`, `requests_waiting`, `kv_cache_usage_ratio`, `prefix_cache_hit_ratio`, `requests_per_second`, `prompt_tokens_per_second`, `generation_tokens_per_second`, `preemptions_per_second`, and `ttft_seconds`, `itl_seconds`, `e2e_seconds`, `queue_seconds`, each with `mean`, `p50`, `p90`, `p99` and `count` |
 | `fleet` | object | Fleet summary and `imbalance` |
 | `events` | array | Up to 200 most recent events, oldest first |
 | `alerts` | array | Active alerts |

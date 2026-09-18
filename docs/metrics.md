@@ -12,6 +12,7 @@ Every value gputop shows has a source:
 | `host` | Operating system counters (via gopsutil or `/sys`) |
 | `procfs` | Per-process data from `/proc` |
 | `kubernetes` | Kubernetes API, pod log directories, cgroups |
+| `application` | Reported by a workload, such as an inference server's Prometheus endpoint (see [inference.md](inference.md)) |
 | `derived` | **Computed by gputop** from other values (documented in [derived-metrics.md](derived-metrics.md) and [health-score.md](health-score.md)) |
 | `simulated` | `--demo` mode; never hardware |
 

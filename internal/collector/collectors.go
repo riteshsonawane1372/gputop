@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/riteshsonawane1372/gputop/internal/gpu"
+	"github.com/riteshsonawane1372/gputop/internal/inference"
 	"github.com/riteshsonawane1372/gputop/internal/kube"
 	"github.com/riteshsonawane1372/gputop/internal/model"
 )
@@ -140,6 +141,9 @@ func (e *Engine) addCollectors() {
 		add("network", "normal", iv.Normal, e.collectNetwork)
 		add("disks", "normal", iv.Normal, e.collectDisks)
 		add("filesystems", "slow", iv.Slow, e.collectFilesystems)
+	}
+	if e.o.Inference != nil {
+		add("inference", "normal", iv.Normal, e.collectInference)
 	}
 	if e.o.Kube != nil {
 		add("kubernetes", "slow", iv.Slow, func(ctx context.Context) error { return e.o.Kube.Refresh(ctx) })
@@ -461,4 +465,44 @@ func (e *Engine) collectFilesystems(ctx context.Context) error {
 	e.hostSnap.Disks = fs
 	e.mu.Unlock()
 	return nil
+}
+
+// collectInference scrapes configured and discovered inference servers.
+func (e *Engine) collectInference(ctx context.Context) error {
+	targets := append([]inference.Target(nil), e.o.Endpoints...)
+	if e.o.Discover {
+		targets = append(targets, inference.Discover(e.inferenceProcs())...)
+	}
+	return e.o.Inference.Scrape(ctx, targets)
+}
+
+// inferenceProcs lists GPU processes with the pod IPs discovery needs to
+// reach containerized servers.
+func (e *Engine) inferenceProcs() []inference.Proc {
+	podIPs := map[string]string{}
+	var pods []kube.PodInfo
+	if sim := e.kubeSimulator(); sim != nil {
+		pods = sim.SimulatedPods()
+	} else if e.o.Kube != nil {
+		pods = e.o.Kube.Pods(nil)
+	}
+	for _, p := range pods {
+		podIPs[p.UID] = p.PodIP
+	}
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	var out []inference.Proc
+	for _, id := range e.order {
+		for _, p := range e.devices[id].procs {
+			if p.Command == "" {
+				continue
+			}
+			out = append(out, inference.Proc{
+				PID: p.PID, Command: p.Command, GPU: p.DeviceIndex,
+				Containerized: p.Kube.ContainerID != "" || p.Kube.PodUID != "",
+				PodIP:         podIPs[p.Kube.PodUID], Pod: p.Kube.PodName,
+			})
+		}
+	}
+	return out
 }
